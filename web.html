@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 English Quiz Master - Learn & Play!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: linear-gradient(135deg, #ffe0f0 0%, #ffc2e0 50%, #ffaad4 100%);
+            --card-bg: rgba(255,255,255,0.75);
+            --accent: #e91e8c;
+            --accent2: #ff6eb4;
+            --success: #4caf85;
+            --danger: #f44336;
+            --text: #4a1040;
+            --text-muted: #b06090;
+            --border: rgba(233,30,140,0.2);
+            --glow: rgba(233,30,140,0.35);
+            --btn-text: #fff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .container { max-width: 800px; width: 100%; }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            border: 1.5px solid var(--border);
+            box-shadow: 0 8px 40px rgba(233,30,140,0.15), 0 2px 8px rgba(255,160,210,0.2);
+            backdrop-filter: blur(16px);
+            transition: transform 0.3s ease;
+        }
+        .card:hover { transform: translateY(-4px); }
+
+        .title {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #e91e8c, #ff6eb4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            text-align: center;
+            font-weight: 800;
+        }
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .score-board span { color: var(--accent); font-weight: 700; }
+        .hearts { font-size: 1.4rem; }
+
+        .timer {
+            width: 90px; height: 90px;
+            border: 4px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+            background: white;
+            box-shadow: 0 0 18px var(--glow);
+            color: var(--accent);
+        }
+
+        .question {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+        @media (min-width: 600px) { .options { grid-template-columns: 1fr 1fr; } }
+
+        .option {
+            padding: 0.9rem 1.2rem;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 1rem;
+            background: white;
+            color: var(--text);
+            font-weight: 500;
+            text-align: center;
+        }
+        .option:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 14px var(--glow);
+            transform: translateY(-2px);
+            background: #fff0f8;
+        }
+        .option.correct {
+            background: #d4f5e9;
+            border-color: var(--success);
+            color: #1a5c3a;
+            animation: pulse 0.5s ease;
+        }
+        .option.wrong {
+            background: #fde8e8;
+            border-color: var(--danger);
+            color: #a00;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+        @keyframes bounce { 0%,20%,50%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-10px)} 60%{transform:translateY(-5px)} }
+
+        .btn {
+            background: linear-gradient(135deg, #e91e8c, #ff6eb4);
+            border: none;
+            padding: 13px 28px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin: 0.4rem 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(233,30,140,0.25);
+        }
+        .btn:hover { transform: scale(1.04); box-shadow: 0 8px 25px rgba(233,30,140,0.4); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .btn.secondary {
+            background: white;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            box-shadow: none;
+        }
+        .btn.secondary:hover { background: #fff0f8; box-shadow: 0 4px 15px var(--glow); }
+
+        .controls { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
+        .hidden { display: none !important; }
+
+        .results { text-align: center; }
+        .grade { font-size: 3rem; margin: 1rem 0; }
+
+        .achievement {
+            display: inline-block;
+            background: linear-gradient(135deg, #e91e8c, #ff6eb4);
+            color: white;
+            padding: 0.45rem 1rem;
+            border-radius: 20px;
+            margin: 0.4rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            animation: bounce 0.6s ease;
+            box-shadow: 0 3px 12px var(--glow);
+        }
+
+        .stats-row { margin: 1.5rem 0; }
+        .stats-row div {
+            padding: 0.5rem 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .stats-row span { color: var(--accent); font-weight: 700; font-size: 1.1rem; }
+
+        #leaderboardList div {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+        #leaderboardList div:first-child { color: var(--accent); font-weight: 700; }
+
+        .speak-btn {
+            margin-left: 0.7rem;
+            font-size: 0.9rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #e91e8c, #ff6eb4);
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .progress-bar-wrap {
+            width: 100%;
+            height: 6px;
+            background: #ffd6ec;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #e91e8c, #ff6eb4);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        @media (max-width: 600px) {
+            .title { font-size: 1.8rem; }
+            .question { font-size: 1.1rem; }
+            .card { padding: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- START SCREEN -->
+    <div id="startScreen" class="card">
+        <h1 class="title">🧠 English WordWiz</h1>
+        <p class="subtitle"> English Vocabulary & Grammar!<br>100+ questions • 5 Levels • Gamified Learning</p>
+        <div class="controls" style="flex-direction:column;align-items:center;">
+            <button class="btn" onclick="startQuiz('vocabulary')">📚 Vocabulary Quiz</button>
+            <button class="btn" onclick="startQuiz('grammar')">📝 Grammar Quiz</button>
+            <button class="btn" onclick="dailyChallenge()">🎯 Daily Challenge</button>
+        </div>
+        <p style="text-align:center;margin-top:1.5rem;color:var(--text-muted);font-size:0.85rem;">
+            By Echa Andini 
+        </p>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="gameScreen" class="card hidden">
+        <div class="score-board">
+            <div>Score: <span id="currentScore">0</span></div>
+            <div class="hearts" id="hearts">❤️❤️❤️</div>
+            <div>Streak: <span id="streak">0</span>x</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+        <div class="timer" id="timer">30</div>
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+        <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>NEXT →</button>
+        <div class="controls">
+            <button class="btn secondary" onclick="togglePractice()" id="practiceBtn">🧘 Practice Mode</button>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="resultsScreen" class="card hidden results">
+        <h2 style="font-size:1.8rem;color:var(--accent);">🎉 Quiz Complete!</h2>
+        <div class="grade" id="finalGrade"></div>
+        <div style="font-size:2.5rem;font-weight:800;color:var(--accent);margin:0.5rem 0;" id="finalScore"></div>
+        <div id="achievements"></div>
+        <div class="stats-row">
+            <div>Correct: <span id="correctCount">0</span>/20</div>
+            <div>Accuracy: <span id="accuracy">0</span>%</div>
+        </div>
+        <div class="controls" style="flex-direction:column;">
+            <button class="btn" onclick="startNewQuiz()">🔄 New Quiz</button>
+            <button class="btn secondary" onclick="showLeaderboard()">🏆 Leaderboard</button>
+            <button class="btn secondary" onclick="shareScore()">📱 Share Score</button>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboardScreen" class="card hidden">
+        <h2 style="color:var(--accent);margin-bottom:1rem;">🏆 Top Scores</h2>
+        <div id="leaderboardList" style="max-height:380px;overflow-y:auto;"></div>
+        <button class="btn" style="margin-top:1rem;" onclick="backToStart()">← Back</button>
+    </div>
+</div>
+
+<script>
+    const questions = {
+        vocabulary: [
+            { q:"What is the opposite of 'big'?", options:["Small","Large","Tall","Wide"], correct:0, explain:"Small = kecil (opposite of big)" },
+            { q:"Which animal says 'meow'?", options:["Dog","Cat","Bird","Fish"], correct:1, explain:"Cat = kucing" },
+            { q:"Synonym of 'happy'", options:["Sad","Joyful","Angry","Tired"], correct:1, explain:"Joyful = senang" },
+            { q:"Choose the correct spelling:", options:["Recieve","Receive","Receve","Recive"], correct:1, explain:"'i before e except after c'" },
+            { q:"Plural of 'child'", options:["Childs","Childes","Children","Childen"], correct:2, explain:"Irregular plural: children" },
+            { q:"'She ___ TV every day.'", options:["watch","watches","watching","watched"], correct:1, explain:"He/She/It + s/es" },
+            { q:"Antonym of 'ancient'", options:["Old","Modern","Historic","Medieval"], correct:1, explain:"Modern = kebalikan dari ancient" },
+            { q:"What does 'diligent' mean?", options:["Lazy","Careless","Hardworking","Rude"], correct:2, explain:"Diligent = rajin" },
+            { q:"Which is a noun?", options:["Run","Beautiful","Happiness","Quickly"], correct:2, explain:"Happiness = kata benda (noun)" },
+            { q:"Synonym of 'brave'", options:["Cowardly","Timid","Courageous","Scared"], correct:2, explain:"Courageous = pemberani" },
+            { q:"What time is morning?", options:["PM","AM","Noon","Midnight"], correct:1, explain:"AM = pagi hari" },
+            { q:"Which word means 'very big'?", options:["Tiny","Gigantic","Small","Slim"], correct:1, explain:"Gigantic = sangat besar" },
+            { q:"Opposite of 'dark'", options:["Bright","Black","Dull","Grey"], correct:0, explain:"Bright = terang" },
+            { q:"'I ___ to the store yesterday.'", options:["go","goes","going","went"], correct:3, explain:"Past tense: went" },
+            { q:"What does 'generous' mean?", options:["Greedy","Stingy","Giving","Mean"], correct:2, explain:"Generous = dermawan" },
+            { q:"Plural of 'mouse'", options:["Mouses","Mousse","Mice","Mouse"], correct:2, explain:"Irregular plural: mice" },
+            { q:"Which is an adjective?", options:["Swim","Quickly","Beautiful","Eat"], correct:2, explain:"Beautiful = kata sifat" },
+            { q:"Synonym of 'start'", options:["End","Finish","Begin","Stop"], correct:2, explain:"Begin = mulai" },
+            { q:"What does 'exhausted' mean?", options:["Energetic","Very tired","Happy","Bored"], correct:1, explain:"Exhausted = sangat lelah" },
+            { q:"Opposite of 'expensive'", options:["Cheap","Pricey","Luxury","Rich"], correct:0, explain:"Cheap = murah" }
+        ],
+        grammar: [
+            { q:"Present Perfect: 'I ___ my keys.'", options:["lose","lost","have lost","losing"], correct:2, explain:"have/has + past participle" },
+            { q:"Future tense:", options:["I eat","I ate","I will eat","I eating"], correct:2, explain:"will + verb base form" },
+            { q:"Preposition: 'I'm good ___ math.'", options:["on","in","at","with"], correct:2, explain:"Good at + subject" },
+            { q:"Passive voice: 'The book ___ by John.'", options:["write","wrote","was written","writing"], correct:2, explain:"was/were + past participle" },
+            { q:"Which is correct?", options:["Who you are?","Who are you?","Are you who?","You who are?"], correct:1, explain:"Question word order" },
+            { q:"'She ___ to school every day.'", options:["walk","walks","walking","walked"], correct:1, explain:"Third person singular: walks" },
+            { q:"Correct sentence:", options:["He don't like cats","He doesn't like cats","He not like cats","He likes not cats"], correct:1, explain:"doesn't + base verb" },
+            { q:"'___ you ever been to Japan?'", options:["Did","Have","Are","Do"], correct:1, explain:"Present perfect question: Have you" },
+            { q:"Which is Past Continuous?", options:["I eat","I ate","I was eating","I have eaten"], correct:2, explain:"was/were + verb-ing" },
+            { q:"Correct article: '___ university'", options:["a","an","the","no article"], correct:0, explain:"'a' sebelum konsonan (u diucap 'yu')" },
+            { q:"'If I ___ rich, I'd travel.'", options:["am","was","were","be"], correct:2, explain:"Second conditional: If I were..." },
+            { q:"Superlative of 'good'", options:["Gooder","Better","Best","Most good"], correct:2, explain:"Irregular: good - better - best" },
+            { q:"'___ she come to the party?'", options:["Do","Does","Did","Is"], correct:2, explain:"Past tense question: Did" },
+            { q:"Which is correct?", options:["I am agree","I agree","I agreeing","I does agree"], correct:1, explain:"Stative verb: I agree" },
+            { q:"Comparative of 'bad'", options:["Badder","More bad","Worse","Worst"], correct:2, explain:"Irregular: bad - worse - worst" },
+            { q:"'They ___ TV when I arrived.'", options:["watch","watches","were watching","watched"], correct:2, explain:"Past continuous: were watching" },
+            { q:"Correct preposition: 'I was born ___ 1999.'", options:["at","on","in","by"], correct:2, explain:"in + year" },
+            { q:"Which is a conjunction?", options:["Quickly","Although","Beautiful","Run"], correct:1, explain:"Although = kata penghubung" },
+            { q:"Correct modal: 'You ___ see a doctor.'", options:["can","will","should","would"], correct:2, explain:"should = saran/anjuran" },
+            { q:"'He has been working here ___ 2010.'", options:["for","since","from","during"], correct:1, explain:"since + specific time point" }
+        ]
+    };
+
+    let currentQuestion=0, score=0, streak=0, lives=3, timer=30;
+    let timerInterval, practiceMode=false, currentCategory='';
+    let quizQuestions=[], userAnswers=[];
+    const speech = window.speechSynthesis;
+
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen  = document.getElementById('gameScreen');
+    const resultsScreen = document.getElementById('resultsScreen');
+    const leaderboardScreen = document.getElementById('leaderboardScreen');
+    const currentScoreEl = document.getElementById('currentScore');
+    const streakEl  = document.getElementById('streak');
+    const heartsEl  = document.getElementById('hearts');
+    const timerEl   = document.getElementById('timer');
+    const questionEl = document.getElementById('question');
+    const optionsEl  = document.getElementById('options');
+    const nextBtn    = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    let highScores = JSON.parse(localStorage.getItem('englishQuizScores')||'[]');
+
+    function startQuiz(category) {
+        currentCategory = category;
+        quizQuestions = [...questions[category]];
+        shuffle(quizQuestions);
+        quizQuestions = quizQuestions.slice(0,20);
+        currentQuestion=0; score=0; streak=0; lives=3; practiceMode=false; userAnswers=[];
+        startScreen.classList.add('hidden');
+        resultsScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        showQuestion();
+    }
+
+    function dailyChallenge() { startQuiz(Math.random()>0.5?'vocabulary':'grammar'); }
+
+    function showQuestion() {
+        if (currentQuestion>=20) { endQuiz(); return; }
+        const q = quizQuestions[currentQuestion];
+        progressBar.style.width = ((currentQuestion/20)*100)+'%';
+
+        questionEl.innerHTML = `<span><strong>Q${currentQuestion+1}/20:</strong> ${q.q}
+            <button class="speak-btn" onclick="speakText('${q.q.replace(/'/g,"\\'")}')">🔊</button></span>`;
+
+        optionsEl.innerHTML='';
+        q.options.forEach((opt,i)=>{
+            const btn=document.createElement('div');
+            btn.className='option';
+            btn.textContent=opt;
+            btn.onclick=()=>selectAnswer(i);
+            optionsEl.appendChild(btn);
+        });
+        nextBtn.disabled=true;
+        timer = practiceMode?999:30;
+        timerEl.textContent=practiceMode?'∞':timer;
+        clearInterval(timerInterval);
+        if(!practiceMode) startTimer();
+    }
+
+    function selectAnswer(idx) {
+        clearInterval(timerInterval);
+        const q=quizQuestions[currentQuestion];
+        const opts=optionsEl.children;
+        userAnswers.push({selected:idx,correct:q.correct});
+
+        Array.from(opts).forEach(o=>o.onclick=null);
+
+        if(idx===q.correct) {
+            score += practiceMode?50:(100+streak*25);
+            streak++;
+            opts[q.correct].classList.add('correct');
+        } else {
+            lives--;
+            streak=0;
+            opts[q.correct].classList.add('correct');
+            opts[idx].classList.add('wrong');
+        }
+        currentScoreEl.textContent=score;
+        streakEl.textContent=streak;
+        heartsEl.textContent='❤️'.repeat(Math.max(0,lives))+'💔'.repeat(Math.max(0,3-lives));
+
+        // show explanation
+        const exp=document.createElement('div');
+        exp.style.cssText='text-align:center;margin-top:0.7rem;font-size:0.9rem;color:#e91e8c;font-weight:600;';
+        exp.textContent='💡 '+q.explain;
+        optionsEl.after(exp);
+        setTimeout(()=>exp.remove(),2500);
+
+        if(lives<=0){setTimeout(endQuiz,1400);return;}
+        nextBtn.disabled=false;
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        showQuestion();
+    }
+
+    function startTimer() {
+        const total=30;
+        timerInterval=setInterval(()=>{
+            timer--;
+            timerEl.textContent=timer;
+            if(timer<=5) timerEl.style.color='#f44336';
+            else timerEl.style.color='var(--accent)';
+            if(timer<=0){
+                clearInterval(timerInterval);
+                lives--;
+                heartsEl.textContent='❤️'.repeat(Math.max(0,lives))+'💔'.repeat(Math.max(0,3-lives));
+                userAnswers.push({selected:-1,correct:quizQuestions[currentQuestion].correct});
+                if(lives>0) nextQuestion(); else setTimeout(endQuiz,800);
+            }
+        },1000);
+    }
+
+    function endQuiz() {
+        clearInterval(timerInterval);
+        gameScreen.classList.add('hidden');
+        resultsScreen.classList.remove('hidden');
+        progressBar.style.width='100%';
+
+        const correct=userAnswers.filter(a=>a.selected===a.correct).length;
+        const acc=Math.round((correct/20)*100);
+        document.getElementById('finalScore').textContent=score+' pts';
+        document.getElementById('correctCount').textContent=correct;
+        document.getElementById('accuracy').textContent=acc;
+
+        const grade=getGrade(score);
+        const gradeEl=document.getElementById('finalGrade');
+        gradeEl.textContent=grade;
+
+        showAchievements(score,acc,correct);
+        saveScore(score);
+    }
+
+    function getGrade(s){
+        if(s>=1800)return'🎖️ A+';
+        if(s>=1500)return'🥇 A';
+        if(s>=1200)return'🥈 B+';
+        if(s>=900)return'🥉 B';
+        if(s>=600)return'📜 C';
+        return'📚 Keep Studying!';
+    }
+
+    function showAchievements(s,acc,correct){
+        const d=document.getElementById('achievements');
+        d.innerHTML='';
+        const best=highScores[0]?.score||0;
+        if(s>best) d.innerHTML+='<div class="achievement">🏆 NEW RECORD!</div>';
+        if(streak>=5) d.innerHTML+='<div class="achievement">🔥 STREAK x'+streak+'!</div>';
+        if(acc===100) d.innerHTML+='<div class="achievement">⭐ PERFECT!</div>';
+        if(correct>=15) d.innerHTML+='<div class="achievement">🌟 EXCELLENT!</div>';
+    }
+
+    function saveScore(s){
+        highScores.unshift({score:s,category:currentCategory,date:new Date().toLocaleDateString()});
+        highScores=highScores.slice(0,10);
+        localStorage.setItem('englishQuizScores',JSON.stringify(highScores));
+    }
+
+    function showLeaderboard(){
+        resultsScreen.classList.add('hidden');
+        leaderboardScreen.classList.remove('hidden');
+        const list=document.getElementById('leaderboardList');
+        if(!highScores.length){list.innerHTML='<div style="padding:1rem;color:var(--text-muted);">No scores yet!</div>';return;}
+        list.innerHTML=highScores.map((s,i)=>
+            `<div>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'  '} #${i+1} — <strong>${s.score} pts</strong> | ${s.category} | ${s.date}</div>`
+        ).join('');
+    }
+
+    function startNewQuiz(){
+        resultsScreen.classList.add('hidden');
+        leaderboardScreen.classList.add('hidden');
+        startScreen.classList.remove('hidden');
+    }
+    function backToStart(){
+        leaderboardScreen.classList.add('hidden');
+        startScreen.classList.remove('hidden');
+    }
+
+    function togglePractice(){
+        practiceMode=!practiceMode;
+        document.getElementById('practiceBtn').textContent=practiceMode?'⏱️ Timed Mode':'🧘 Practice Mode';
+    }
+
+    function speakText(text){
+        speech.cancel();
+        const u=new SpeechSynthesisUtterance(text);
+        u.lang='en-US'; u.rate=0.85;
+        speech.speak(u);
+    }
+
+    function shareScore(){
+        const s=document.getElementById('finalScore').textContent;
+        if(navigator.share){
+            navigator.share({title:'English Quiz Master',text:`I scored ${s} in English Quiz Master! 🎉`});
+        } else {
+            navigator.clipboard?.writeText(`I scored ${s} in English Quiz Master! 🎉`);
+            alert('Score copied to clipboard! 📋');
+        }
+    }
+
+    function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+            const j=Math.floor(Math.random()*(i+1));
+            [arr[i],arr[j]]=[arr[j],arr[i]];
+        }
+    }
+
+    document.addEventListener('keydown',e=>{
+        if(gameScreen.classList.contains('hidden'))return;
+        if(e.key>='1'&&e.key<='4') optionsEl.children[+e.key-1]?.click();
+        else if(e.code==='Enter'&&!nextBtn.disabled) nextBtn.click();
+    });
+</script>
+</body>
+</html>

@@ -1,173 +1,1137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<title>Echa's English Playground 🌸 | Fun Language Games</title>
-<link rel="stylesheet" href="style.css">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Word Quest: English Search Odyssey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- COLOR PALETTE & VARIABLES --- */
+    :root {
+      --main-bg: #d8f3dc; /* Soft Minimarket Green */
+      --cream-card: rgba(247, 245, 235, 0.85); /* Premium Glassmorphism Cream Base */
+      --dark-charcoal: #1b4332; /* Readable deep forest green */
+      --accent-green: #2d6a4f;
+      --shelf-wood: #b79457;
+      --correct-ans: #9bf6ff; /* Vivid soft cyan/green */
+      --wrong-ans: #ffadad; /* Vivid soft red */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--main-bg);
+      color: var(--dark-charcoal);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow-x: hidden;
+      padding: 20px;
+      background: 
+        linear-gradient(rgba(183, 228, 199, 0.4), rgba(247, 245, 235, 0.2)),
+        linear-gradient(90deg, #ffffff 15%, transparent 15%, transparent 85%, #ffffff 85%),
+        repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(27, 67, 50, 0.05) 38px, rgba(27, 67, 50, 0.05) 40px);
+    }
+
+    /* Struktur Visual Rak Minimarket Kiri & Kanan */
+    body::before, body::after {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 14%;
+      background: repeating-linear-gradient(var(--shelf-wood) 0px, var(--shelf-wood) 15px, #f4e1d2 15px, #f4e1d2 55px, var(--accent-green) 55px, var(--accent-green) 60px);
+      border-left: 3px solid #735721;
+      border-right: 3px solid #735721;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      z-index: 1;
+    }
+    body::before { left: 0; clip-path: polygon(0 0, 100% 12%, 100% 88%, 0 100%); }
+    body::after { right: 0; clip-path: polygon(100% 0, 0 12%, 0 88%, 100% 100%); }
+
+    /* --- CONTAINER WINDOW (GLASSMORPHISM KAPAL INDUK) --- */
+    .game-window {
+      width: 100%;
+      max-width: 820px;
+      min-height: 640px;
+      background: var(--cream-card); 
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      border-radius: 32px;
+      box-shadow: 0 25px 60px rgba(27, 67, 50, 0.2);
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      animation: screenSlide 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes screenSlide {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- UI ELEMENTS --- */
+    h2 { font-size: 2.6rem; font-weight: 900; margin-bottom: 8px; text-align: center; letter-spacing: -0.5px; }
+    p.subtitle { font-size: 1.1rem; font-weight: 600; margin-bottom: 25px; opacity: 0.8; text-align: center; }
+
+    .input-field {
+      width: 100%; padding: 14px; border-radius: 14px; border: 2px solid rgba(27,67,50,0.2);
+      font-size: 1.05rem; text-align: center; font-weight: 600; outline: none; transition: border-color 0.2s;
+      background: rgba(255,255,255,0.8);
+    }
+    .input-field:focus { border-color: var(--accent-green); background: #ffffff; }
+
+    .btn {
+      display: block; width: 100%; max-width: 320px; padding: 14px 25px; margin: 10px auto;
+      font-size: 1.1rem; font-weight: 800; color: #ffffff; background-color: var(--dark-charcoal);
+      border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 5px 15px rgba(27, 67, 50, 0.2);
+      transition: all 0.2s ease; text-align: center;
+    }
+    .btn:hover { background-color: #40916c; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(27, 67, 50, 0.3); }
+
+    .lobby-abort-bar {
+      width: 100%; display: flex; justify-content: flex-end; margin-bottom: 10px;
+    }
+    .btn-quit {
+      background: rgba(217, 4, 41, 0.1); color: #d90429; border: 1px solid rgba(217, 4, 41, 0.2);
+      padding: 6px 14px; font-weight: 800; border-radius: 30px; cursor: pointer; font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn-quit:hover { background: #d90429; color: white; }
+
+    /* Premium Bento Menu Layout */
+    .menu-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; width: 100%; max-width: 700px; margin: 0 auto;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.7); backdrop-filter: blur(8px);
+      border-radius: 24px; padding: 25px; text-align: center; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04); transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .game-card:hover {
+      transform: translateY(-6px); background: rgba(255, 255, 255, 0.9); border-color: var(--accent-green);
+      box-shadow: 0 15px 35px rgba(27, 67, 50, 0.15);
+    }
+    
+    .game-card .icon-wrapper {
+      width: 85px; height: 85px; border-radius: 20px;
+      background: linear-gradient(135deg, rgba(216, 243, 220, 0.6), rgba(183, 228, 199, 0.6));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; box-shadow: 0 4px 12px rgba(27, 67, 50, 0.08); transition: transform 0.3s;
+    }
+    .game-card:hover .icon-wrapper { transform: scale(1.1) rotate(5deg); }
+    
+    .game-card .card-info { width: 100%; }
+    .game-card h4 { font-size: 1.25rem; font-weight: 800; color: var(--dark-charcoal); margin-bottom: 5px; }
+    .game-card p { font-size: 0.88rem; font-weight: 600; opacity: 0.75; line-height: 1.4; text-align: center; }
+
+    .mode-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .mode-tab { padding: 10px 24px; background: rgba(255,255,255,0.6); border: 2px solid rgba(27,67,50,0.15); font-weight: 800; border-radius: 20px; cursor: pointer; transition: all 0.2s; }
+    .mode-tab.active { background: var(--dark-charcoal); color: white; border-color: var(--dark-charcoal); }
+    
+    .turn-indicator { display: inline-block; background: #b7e4c7; padding: 6px 16px; border-radius: 20px; font-weight: 800; margin-bottom: 12px; font-size: 0.95rem; border: 1px solid rgba(27,67,50,0.1); }
+    .progress-tracker { font-size: 0.95rem; font-weight: 800; margin-bottom: 15px; color: #40916c; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* --- DESAIN PREMIUM INTERAKTIF BOX SOAL --- */
+    .display-box { 
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 241, 226, 0.85)); 
+      padding: 35px 25px; border-radius: 28px; font-size: 1.35rem; font-weight: 800; margin-bottom: 20px; 
+      border: 2px solid rgba(255, 255, 255, 0.9); 
+      box-shadow: 
+        inset 0 3px 6px rgba(255,255,255,1), 
+        0 15px 35px rgba(27, 67, 50, 0.08),
+        0 4px 6px rgba(0, 0, 0, 0.02); 
+      position: relative; overflow: hidden;
+    }
+    .display-box::before {
+      content: ""; position: absolute; top: -30px; left: -30px; width: 100px; height: 100px;
+      background: linear-gradient(135deg, rgba(155, 246, 255, 0.3), rgba(255, 173, 178, 0.2));
+      border-radius: 50%; filter: blur(10px); pointer-events: none;
+    }
+    .box-sticker-icon {
+      position: absolute; bottom: -10px; right: -5px; font-size: 5rem; opacity: 0.07; pointer-events: none;
+    }
+
+    /* --- TIMING SYSTEM PROGRESS BAR --- */
+    .timer-container {
+      width: 100%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; margin-bottom: 20px; overflow: hidden; display: none;
+    }
+    .timer-bar {
+      width: 100%; height: 100%; background: linear-gradient(90deg, #52b788, #d90429); transition: width 0.1s linear;
+    }
+
+    .options-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 550px; margin: 0 auto; }
+
+    .option-btn {
+      padding: 16px 20px; font-size: 1.05rem; font-weight: 700; color: var(--dark-charcoal);
+      background-color: rgba(255, 255, 255, 0.9); border: 2px solid rgba(27, 67, 50, 0.06);
+      border-radius: 16px; cursor: pointer; transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    }
+    .option-btn:hover { border-color: var(--dark-charcoal); background-color: #ffffff; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(27,67,50,0.06); }
+
+    .option-btn.correct, .match-node.correct { background-color: var(--correct-ans) !important; border-color: #2d6a4f !important; animation: pop 0.3s; color: #1b4332 !important; }
+    .option-btn.wrong, .match-node.wrong { background-color: var(--wrong-ans) !important; border-color: #d90429 !important; animation: shake 0.4s; color: #5c0606 !important; }
+
+    .screen-decorator-line { width: 40px; height: 4px; background: var(--accent-green); border-radius: 2px; margin: 0 auto 15px auto; opacity: 0.5; }
+
+    /* --- MINI GAME SPECIALS --- */
+    #falling-track-space { width: 100%; height: 250px; background: rgba(255, 255, 255, 0.6); border-radius: 20px; border: 2px dashed rgba(27, 67, 50, 0.3); position: relative; overflow: hidden; margin-bottom: 20px; }
+    .drifting-item { position: absolute; top: 0; padding: 8px 22px; background-color: #ffffff; border: 2px solid var(--dark-charcoal); border-radius: 30px; font-size: 1.2rem; font-weight: 800; box-shadow: 0 5px 10px rgba(0,0,0,0.05); }
+
+    .match-matrix { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 500px; margin: 0 auto; width: 100%; }
+    .match-column { display: flex; flex-direction: column; gap: 10px; }
+    .match-node { padding: 14px; background: #ffffff; border: 2px solid rgba(27, 67, 50, 0.06); border-radius: 14px; font-weight: 700; cursor: pointer; font-size: 1.1rem; transition: all 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.02); }
+    .match-node:hover { background-color: #f1f8e9; }
+    .match-node.selected { border-color: #52b788; background-color: #e8f5e9; }
+    .match-node.paired { background-color: #e2eafc; border-color: #adb5bd; pointer-events: none; opacity: 0.6; }
+
+    /* --- STYLING KOMPONEN UTAMA MULTI-CLUE WORD SEARCH --- */
+    .word-clue-box {
+      display: flex; justify-content: center; gap: 12px; margin-bottom: 15px; width: 100%; flex-wrap: wrap;
+    }
+    .clue-card {
+      background: white; border: 3px solid #cbd5e1; border-radius: 16px; width: 75px; height: 75px;
+      display: flex; align-items: center; justify-content: center; font-size: 2.6rem; 
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05); position: relative; transition: all 0.2s;
+    }
+    .clue-card.found {
+      border-color: #4ade80; background-color: #dcfce7; transform: scale(0.95); opacity: 0.65;
+    }
+    .clue-card.found::after {
+      content: "✓"; position: absolute; top: -5px; right: -5px; background: #22c55e;
+      color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 0.85rem;
+      display: flex; align-items: center; justify-content: center; font-weight: 900;
+    }
+    .clue-card.wrong {
+    border-color: #d90429 !important;
+    background-color: #ffadad !important;
+    transform: scale(0.95);
+  }
+
+    .wordsearch-grid {
+      display: grid; grid-template-columns: repeat(10, 42px); gap: 6px; 
+      margin: 15px auto; justify-content: center; background: #f8fafc;
+      padding: 15px; border-radius: 24px; border: 4px solid var(--dark-charcoal);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.08); touch-action: none; user-select: none;
+    }
+    .grid-cell {
+      width: 42px; height: 42px; background: white; border: 2px solid #e2e8f0;
+      border-radius: 10px; display: flex; justify-content: center; align-items: center;
+      font-size: 1.35rem; font-weight: 900; color: #1e293b; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .grid-cell.selected {
+      background: #bae6fd; border-color: #38bdf8; transform: scale(1.05);
+    }
+    .grid-cell.highlighted {
+      background: #4ade80 !important; border-color: #16a34a !important; color: #14532d !important;
+      pointer-events: none; 
+    }
+
+    .current-word-preview {
+      font-size: 1.4rem; font-weight: 900; background: var(--dark-charcoal);
+      color: white; padding: 8px 24px; border-radius: 30px; letter-spacing: 2px;
+      margin: 5px auto 10px auto; display: inline-block; min-width: 160px; text-align: center;
+    }
+
+    /* --- REWORKED FIX: MODAL DIALOG KECIL KHUSUS INTERMISSION (TIDAK MENUTUPI FULL SCREEN) --- */
+    .turn-overlay-container {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(27, 67, 50, 0.25); /* Efek redup transparan tipis di belakang */
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border-radius: 32px; z-index: 100; display: none;
+      align-items: center; justify-content: center;
+    }
+    
+    .turn-switch-modal {
+      background: rgba(247, 245, 235, 0.95); /* Cream Base */
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      padding: 30px 25px; border-radius: 24px; width: 85%; max-width: 420px;
+      text-align: center; box-shadow: 0 15px 45px rgba(27,67,50,0.3);
+      animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      color: var(--dark-charcoal);
+    }
+    .turn-switch-modal h3 { font-size: 2rem; font-weight: 900; color: var(--dark-charcoal); margin-bottom: 8px; }
+    .turn-switch-modal p { font-size: 1.05rem; font-weight: 700; opacity: 0.85; margin-bottom: 20px; color: #2d6a4f; }
+
+    @keyframes modalPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* --- TABEL LEADERBOARD STYLING --- */
+    .leaderboard-container {
+      width: 100%; max-width: 500px; margin: 0 auto 20px auto; background: rgba(255,255,255,0.6);
+      border-radius: 16px; overflow: hidden; border: 1px solid rgba(27,67,50,0.1);
+    }
+    .leaderboard-table { width: 100%; border-collapse: collapse; text-align: left; }
+    .leaderboard-table th, .leaderboard-table td { padding: 14px 18px; font-size: 1.05rem; }
+    .leaderboard-table th { background: var(--dark-charcoal); color: white; font-weight: 800; }
+    .leaderboard-table tr:not(:last-child) { border-bottom: 1px solid rgba(27,67,50,0.06); }
+    .leaderboard-table tr:nth-child(even) { background: rgba(255,255,255,0.3); }
+
+    /* --- FOOTER & MISC --- */
+    .creator-tag { margin-top: 25px; font-size: 0.85rem; font-weight: 700; color: var(--dark-charcoal); background: rgba(255, 255, 255, 0.4); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(27, 67, 50, 0.1); display: inline-block; letter-spacing: 0.5px; }
+    .score-circle { width: 100px; height: 100px; background: var(--dark-charcoal); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.8rem; font-weight: 900; margin: 15px auto; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+  </style>
 </head>
 <body>
-<div class="feedback-overlay" id="feedbackOverlay"></div>
-<div class="turn-badge" id="turnIndicator"></div>
-<div class="modal active" id="modeModal">
-<div class="modal-card">
-<h2>🌸 Choose Game Mode 🌸</h2>
-<p>Solo or take turns with a friend!</p>
-<button class="modal-btn" onclick="chooseGameMode(1)">🧸 Single Player</button>
-<button class="modal-btn secondary" onclick="chooseGameMode(2)">👭 2 Players (Take Turns)</button>
-</div>
-</div>
 
-<!-- PLAYER NAME -->
-<div class="modal" id="nameModal">
-<div class="modal-card">
-<h2>🌸 Let's Meet You 🌸</h2>
-<input type="text" class="modal-input" id="player1Name" placeholder="Player 1 name">
-<input type="text" class="modal-input" id="player2Name" placeholder="Player 2 name" style="display:none;">
-<button class="modal-btn" onclick="confirmPlayersStart()">🚀 Start Adventure</button>
-</div>
-</div>
+  <div class="game-window">
+    
+    <div class="turn-overlay-container" id="turn-switch-panel">
+      <div class="turn-switch-modal">
+        <div style="font-size: 3.5rem; margin-bottom: 5px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));"></div>
+        <h3 id="ts-player-title">PLAYER TURN</h3>
+        <p id="ts-player-desc">Pass the device to the next player!</p>
+        <button class="btn" style="background: linear-gradient(135deg, #fff3e0, #ffe0b2); color: #1b4332; margin-top: 5px; box-shadow: 0 4px 12px rgba(255,243,224,0.4); border: 1px solid rgba(255,255,255,0.5);" onclick="confirmReadyForNextTurn()">I AM READY!!!🍄‍🟫</button>
+      </div>
+    </div>
+    
+    <div id="screen-login" class="screen active">
+      <div style="font-size: 3.5rem; margin-bottom: 5px; text-align:center;">ִ ࣪ ˖ ࣪ ᨰꫀᥣᥴ᥆ꩇꫀ! 🦦ྀི ᰔ ִ ׄ</div>
+      <h2>Word Quest: English Search Odyssey</h2>
+      <p class="subtitle" style="margin-bottom:20px;">Setup player profiles to begin the quest</p>
+      
+      <div class="mode-selector">
+        <div id="tab-1p" class="mode-tab active" onclick="setPlayerMode(1)">1 Player</div>
+        <div id="tab-2p" class="mode-tab" onclick="setPlayerMode(2)">2 Players</div>
+      </div>
 
-<header class="site-header" id="siteHeader">
-<div class="logo">Echa's <span>English</span> 🌸</div>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-<button class="back-btn" id="backBtn" style="display:none" onclick="goLobby()">← Lobby</button>
-<div class="score-pill">⭐ P1: <span id="globalP1Score">0</span> &nbsp;|&nbsp; P2: <span id="globalP2Score">0</span></div>
-</div>
-</header>
+      <div style="margin-bottom: 25px; max-width: 320px; margin-left: auto; margin-right: auto;">
+        <input type="text" id="username-p1" class="input-field" placeholder="Player 1 Name" style="margin-bottom:10px;" autocomplete="off">
+        <input type="text" id="username-p2" class="input-field" placeholder="Player 2 Name" style="display:none;" autocomplete="off">
+      </div>
+      <button class="btn" onclick="processLogin()">Login & Open Menu</button>
+    </div>
 
-<section class="page active" id="lobby">
-<div class="lobby-hero">
-<div class="crown">🌸</div>
-<h1>English Playground</h1>
-<p>Choose a game and boost your English skills!</p>
-<div class="welcome-text" id="welcomeName"></div>
-<div class="owner-tag">✨ Created for Echa Andini ✨</div>
-</div>
+    <div id="screen-menu" class="screen">
+      <h2>Select Your Challenge</h2>
+      <p class="subtitle">Pick a challenge to test your English vocabulary!</p>
+      
+      <div class="mode-selector" style="margin-bottom: 25px;">
+        <div id="timer-off" class="mode-tab active" onclick="toggleTimerMode(false)">Mode: Untimed</div>
+        <div id="timer-on" class="mode-tab" onclick="toggleTimerMode(true)">Mode: Timed Challenge (30s)</div>
+      </div>
 
-<div class="game-cards">
-<div class="game-card glass" onclick="launchGame('game1')">
-<span class="card-icon">🖼️</span>
-<div class="card-title">Picture-Word Match</div>
-<div class="card-desc">Look at the emoji and pick the correct English word!</div>
-<span class="card-badge">Guess the Picture</span>
-</div>
-<div class="game-card glass" onclick="launchGame('game2')">
-<span class="card-icon">🔍</span>
-<div class="card-title">Odd One Out</div>
-<div class="card-desc">Find the word that doesn't belong in the group!</div>
-<span class="card-badge">Find the Different One</span>
-</div>
-<div class="game-card glass" onclick="launchGame('game3')">
-<span class="card-icon">⚡</span>
-<div class="card-title">Quick Translate Catch</div>
-<div class="card-desc">Catch the falling Indonesian word before it hits the ground!</div>
-<span class="card-badge">Translate Fast!</span>
-</div>
-</div>
+      <div class="menu-grid">
+        <div class="game-card" onclick="initiateSession('falling')">
+          <div class="icon-wrapper">📀</div>
+          <div class="card-info">
+            <h4>Falling Words</h4>
+            <p>Catch translations before items hit the floor.</p>
+          </div>
+        </div>
 
-<div style="text-align:center; padding-bottom: 30px;">
-<button class="btn-secondary" onclick="showLeaderboard()" style="font-size:1rem; padding: 12px 28px;">🏆 Leaderboard</button>
-</div>
+        <div class="game-card" onclick="initiateSession('match')">
+          <div class="icon-wrapper">🫠</div>
+          <div class="card-info">
+            <h4>Word Match Emoji</h4>
+            <p>Connect words and matching emojis completely first.</p>
+          </div>
+        </div>
 
-<footer class="footer">By Echa Andini 💖 &nbsp;|&nbsp; Echa's English Playground © 2026</footer>
-</section>
+        <div class="game-card" onclick="initiateSession('odd')">
+          <div class="icon-wrapper">💛</div>
+          <div class="card-info">
+            <h4>Odd One Out</h4>
+            <p>Spot the item that doesn't fit the store category.</p>
+          </div>
+        </div>
 
-<section class="page" id="game1">
-<div class="game-wrap">
-<div class="game-title">🖼️ Picture-Word Match</div>
-<div class="game-sub">What does this emoji mean? Pick the correct word!</div>
-<div class="q-counter" id="g1Counter">Question 1 / 5</div>
-<div class="progress-bar"><div class="progress-fill" id="g1Progress" style="width:20%"></div></div>
-<div class="glass emoji-box" id="g1Emoji">🐱</div>
-<div class="choices" id="g1Choices"></div>
-</div>
-<footer class="footer">By Echa Andini 💖</footer>
-</section>
+        <div class="game-card" onclick="initiateSession('shopping')">
+          <div class="icon-wrapper">😋</div>
+          <div class="card-info">
+            <h4>Word Search Clue</h4>
+            <p>Find the hidden english words inside the letter grid board!</p>
+          </div>
+        </div>
+      </div>
 
-<section class="page" id="game2">
-<div class="game-wrap">
-<div class="game-title">🔍 Odd One Out</div>
-<div class="game-sub">Which word does NOT belong? Click it!</div>
-<div class="q-counter" id="g2Counter">Question 1 / 5</div>
-<div class="progress-bar"><div class="progress-fill" id="g2Progress" style="width:20%"></div></div>
-<p style="color:var(--text-mid);font-size:0.9rem;margin-bottom:16px;" id="g2Hint"></p>
-<div class="odd-grid" id="g2Choices"></div>
-</div>
-<footer class="footer">By Echa Andini 💖</footer>
-</section>
+      <button class="btn" style="margin-top: 25px; background: #2d6a4f;" onclick="openLeaderboardScreen()">🏆 View Leaderboard</button>
+    </div>
 
-<section class="page" id="game3">
-<div class="game-wrap">
-<div class="game-title">⚡ Quick Translate Catch</div>
-<div class="game-sub">Translate the word before it hits the bottom!</div>
-<div class="q-counter" id="g3Counter">Question 1 / 5</div>
-<div class="progress-bar"><div class="progress-fill" id="g3Progress" style="width:20%"></div></div>
-<div class="time-bar"><div class="time-fill" id="g3TimeFill" style="width:100%"></div></div>
-<div class="fall-arena" id="g3Arena">
-<div class="falling-word" id="g3FallingWord">Kucing</div>
-</div>
-<div class="translate-prompt">🇮🇩 → 🇬🇧 What is the English word?</div>
-<div class="fall-choices" id="g3Choices"></div>
-</div>
-<footer class="footer"> By Echa Andini 💖</footer>
-</section>
+    <div class="timer-container" id="global-timer-container">
+      <div class="timer-bar" id="global-timer-bar"></div>
+    </div>
 
-<section class="page" id="result">
-<div class="game-wrap">
-<div class="result-card glass">
-<div class="result-emoji" id="resultEmoji">🎉</div>
-<div class="result-title" id="resultTitle">Amazing!</div>
-<div class="result-score" id="resultScore">You scored 5 / 5 in this round!</div>
-<div class="result-total" id="resultTotal">⭐ Total Score: 50</div>
-<div class="saved-notice" id="savedNotice"></div>
-<div class="result-btns">
-<button class="btn-primary" id="playAgainBtn" onclick="restartGameRound()">▶ Play Again</button>
-<button class="btn-secondary" onclick="goLobby()">🏠 Lobby</button>
-<button class="btn-secondary" onclick="showLeaderboard()">🏆 Leaderboard</button>
-</div>
-</div>
-</div>
-<footer class="footer">By Echa Andini 💖 &nbsp;|&nbsp; Echa's English Playground © 2026</footer>
-</section>
+    <div id="screen-standard" class="screen">
+      <div class="lobby-abort-bar"><button class="btn-quit" onclick="abortToLobby()">⋆˚꩜ Quit to Lobby</button></div>
+      <div class="screen-decorator-line"></div>
+      <div id="std-turn-box" class="turn-indicator">Turn</div>
+      <div class="progress-tracker" id="game-progress">Question 1 / 5</div>
+      <div class="display-box" id="game-content-area"></div>
+      <div class="options-container" id="game-options-area"></div>
+    </div>
 
-<section class="page" id="leaderboard">
-<div class="leaderboard-wrap">
-<div class="leaderboard-title">🏆 Score Leaderboard 🏆</div>
-<div class="leaderboard-sub">Scores saved automatically in your browser</div>
+    <div id="screen-falling-game" class="screen">
+      <div class="lobby-abort-bar"><button class="btn-quit" onclick="abortToLobby()">⋆˚꩜ Quit to Lobby</button></div>
+      <div class="screen-decorator-line"></div>
+      <div id="fall-turn-box" class="turn-indicator">Turn</div>
+      <div class="progress-tracker" id="falling-progress">Question 1 / 5</div>
+      <div id="falling-track-space"></div>
+      <div class="options-container" id="falling-options-area"></div>
+    </div>
 
-<div class="leaderboard-filters">
-<button class="filter-btn active" onclick="filterLeaderboard('all')" id="filter-all">📋 All Games</button>
-<button class="filter-btn" onclick="filterLeaderboard('game1')" id="filter-game1">🖼️ Picture</button>
-<button class="filter-btn" onclick="filterLeaderboard('game2')" id="filter-game2">🔍 Odd One</button>
-<button class="filter-btn" onclick="filterLeaderboard('game3')" id="filter-game3">⚡ Translate</button>
-</div>
+    <div id="screen-match-game" class="screen">
+      <div class="lobby-abort-bar"><button class="btn-quit" onclick="abortToLobby()">⋆˚꩜ Quit to Lobby</button></div>
+      <div class="screen-decorator-line"></div>
+      <div id="match-turn-box" class="turn-indicator">Turn</div>
+      <div class="progress-tracker" id="match-progress">Question 1 / 5</div>
+      <div class="match-matrix">
+        <div class="match-column" id="match-left-col"></div>
+        <div class="match-column" id="match-right-col"></div>
+      </div>
+      <button class="btn" id="btn-submit-match" style="margin-top:25px; display:none;" onclick="evaluateFinalMatchPairs()">Check Answers & Next</button>
+    </div>
 
-<div class="glass" style="padding: 20px; max-height: 450px; overflow-y: auto;">
-<table class="leaderboard-table" id="leaderboardTable">
-<thead>
-<tr>
-<th>Rank</th>
-<th>Player</th>
-<th>Game</th>
-<th>Score</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody id="leaderboardBody"></tbody>
-</table>
-<div class="empty-msg" id="emptyLeaderboardMsg" style="display:none;">No scores yet. Play a game first! 🎮</div>
-</div>
+    <div id="screen-shopping" class="screen">
+      <div class="lobby-abort-bar"><button class="btn-quit" onclick="abortToLobby()">⋆˚꩜ Quit to Lobby</button></div>
+      <div class="screen-decorator-line"></div>
+      <div id="shop-turn-box" class="turn-indicator">Turn</div>
+      <div class="progress-tracker" id="shop-progress">Duel Match Arena</div>
+      
+      <div class="word-clue-box" id="wsearch-clue-container"></div>
+      
+      <div style="text-align: center;">
+        <div class="current-word-preview" id="wsearch-preview">SELECT...</div>
+      </div>
 
-<div class="result-bts" style="margin-top: 24px; justify-content: center;">
-<button class="btn-secondary" onclick="clearLeaderboard()" style="background:#fee2e2; color:#991b1b; border-color:#fca5a5;">🗑️ Clear All</button>
-<button class="btn-primary" onclick="goLobby()">🏠 Lobby</button>
-</div>
-</div>
-<footer class="footer">By Echa Andini 💖 &nbsp;|&nbsp; Echa's English Playground © 2026</footer>
-</section>
+      <div class="wordsearch-grid" id="wsearch-grid-board"></div>
 
-<script src="script.js"></script>
+      <div style="display: flex; justify-content: center; gap: 10px; max-width: 400px; margin: 0 auto;">
+        <button class="btn" style="background:#5c677d; margin:5px 0;" onclick="clearSelectedWordChain()">Clear Link</button>
+        <button class="btn" style="background:#1b4332; margin:5px 0;" onclick="validateCurrentWordChain()">Check Word</button>
+      </div>
+    </div>
+
+    <div id="screen-score" class="screen">
+      <div style="font-size: 4rem; text-align:center;">🏆</div>
+      <h2>Game Quest Complete!</h2>
+      <div id="score-results-wrapper" style="margin: 20px 0;"></div>
+      <button class="btn" onclick="returnToMainMenu()">Back to Menu</button>
+    </div>
+
+    <div id="screen-leaderboard" class="screen">
+      <div style="font-size: 3.5rem; text-align:center; margin-bottom:10px;">👑</div>
+      <h2>Top Scores Leaderboard</h2>
+      <p class="subtitle">Best local players record list</p>
+      
+      <div class="leaderboard-container">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>High Score</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-rows"></tbody>
+        </table>
+      </div>
+      <button class="btn" onclick="returnToMainMenu()">Back to Lobby</button>
+    </div>
+
+    <div class="creator-tag">✨ Created by Echa Andini</div>
+
+  </div>
+
+  <script>
+    /* --- DATA BANKS (15 ITEMS EACH) --- */
+    const dbFalling = [
+      { word: "Shopping Cart", a: "Keranjang Belanja", o: ["Keranjang Belanja", "Uang Kembalian", "Daftar Harga", "Rak Toko"] },
+      { word: "Receipt", a: "Struk Pembayaran", o: ["Struk Pembayaran", "Kantung Plastik", "Dompet Masuk", "Kartu Diskon"] },
+      { word: "Cashier", a: "Kasir", o: ["Kasir", "Pembeli", "Manajer", "Satpam"] },
+      { word: "Snack", a: "Makanan Ringan", o: ["Makanan Ringan", "Minuman Dingin", "Sayuran Segar", "Bumbu Dapur"] },
+      { word: "Vegetables", a: "Sayur-sayuran", o: ["Sayur-sayuran", "Buah-buahan", "Daging Sapi", "Kue Kering"] },
+      { word: "Toothpaste", a: "Pasta Gigi", o: ["Pasta Gigi", "Sabun Mandi", "Sikat Rambut", "Pembersih Lantai"] },
+      { word: "Juice", a: "Jus", o: ["Jus", "Susu Bubuk", "Kopi Hitam", "Teh Manis"] },
+      { word: "Tissue", a: "Tisu", o: ["Tisu", "Handuk", "Kapas Wajah", "Sabun Cuci"] },
+      { word: "Shampoo", a: "Sampo", o: ["Sampo", "Minyak Rambut", "Sabun Muka", "Parfum"] },
+      { word: "Price", a: "Harga", o: ["Harga", "Barang", "Gratis", "Diskon"] },
+      { word: "Store", a: "Toko", o: ["Toko", "Pasar", "Rumah", "Kantor"] },
+      { word: "Customer", a: "Pelanggan", o: ["Pelanggan", "Penjual", "Pekerja", "Pemilik"] },
+      { word: "Bag", a: "Tas / Kantong", o: ["Tas / Kantong", "Dompet", "Kotak", "Tali"] },
+      { word: "Butter", a: "Mentega", o: ["Mentega", "Minyak Goreng", "Susu", "Keju"] },
+      { word: "Salt", a: "Garam", o: ["Garam", "Gula", "Merica", "Cuka"] }
+    ];
+
+    const dbMatch = [
+      { pairs: [{l:"🍎", r:"Apple"}, {l:"🥛", r:"Milk"}, {l:"🍞", r:"Bread"}] },
+      { pairs: [{l:"🍫", r:"Chocolate"}, {l:"🥚", r:"Egg"}, {l:"🥤", r:"Soda"}] },
+      { pairs: [{l:"🧀", r:"Cheese"}, {l:"🧼", r:"Soap"}, {l:"🐟", r:"Fish"}] },
+      { pairs: [{l:"🍬", r:"Candy"}, {l:"🍌", r:"Banana"}, {l:"🍰", r:"Cake"}] },
+      { pairs: [{l:"🍉", r:"Watermelon"}, {l:"🍪", r:"Cookie"}, {l:"🍿", r:"Popcorn"}] },
+      { pairs: [{l:"🍋", r:"Lemon"}, {l:"🥩", r:"Meat"}, {l:"🧅", r:"Onion"}] },
+      { pairs: [{l:"🍟", r:"French Fries"}, {l:"🍩", r:"Donut"}, {l:"🍯", r:"Honey"}] },
+      { pairs: [{l:"🥕", r:"Carrot"}, {l:"🍇", r:"Grapes"}, {l:"🍦", r:"Ice Cream"}] },
+      { pairs: [{l:"🍍", r:"Pineapple"}, {l:"🍗", r:"Chicken"}, {l:"🧂", r:"Salt"}] },
+      { pairs: [{l:"🍅", r:"Tomato"}, {l:"🧈", r:"Butter"}, {l:"☕", r:"Coffee"}] },
+      { pairs: [{l:"🍄", r:"Mushroom"}, {l:"🥜", r:"Peanut"}, {l:"🧃", r:"Juice Box"}] },
+      { pairs: [{l:"🌶️", r:"Chili"}, {l:"🍤", r:"Shrimp"}, {l:"🥞", r:"Pancake"}] },
+      { pairs: [{l:"🍓", r:"Strawberry"}, {l:"🍔", r:"Burger"}, {l:"🍕", r:"Pizza"}] },
+      { pairs: [{l:"🥑", r:"Avocado"}, {l:"🌽", r:"Corn"}, {l:"🍙", r:"Rice Ball"}] },
+      { pairs: [{l:"🍒", r:"Cherry"}, {l:"🥔", r:"Potato"}, {l:"🍣", r:"Sushi"}] }
+    ];
+
+    const dbOdd = [
+      { q: "Identify the item that does NOT belong with food products:", a: "Soap", o: ["Apple", "Bread", "Soap", "Cheese"] },
+      { q: "Identify the item that is NOT a liquid drink:", a: "Cookie", o: ["Milk", "Water", "Juice", "Cookie"] },
+      { q: "Identify the item that is NOT a sweet snack:", a: "Salt", o: ["Chocolate", "Candy", "Salt", "Cake"] },
+      { q: "Identify the item that is NOT found in the fruit aisle:", a: "Onion", o: ["Apple", "Banana", "Onion", "Lemon"] },
+      { q: "Identify the item that is NOT a dairy product:", a: "Egg", o: ["Milk", "Cheese", "Butter", "Egg"] },
+      { q: "Identify the item that does NOT belong to cleaning supplies:", a: "Bread", o: ["Soap", "Shampoo", "Toothpaste", "Bread"] },
+      { q: "Identify the item that is NOT a bakery product:", a: "Fish", o: ["Bread", "Cake", "Cookie", "Fish"] },
+      { q: "Identify the item that is NOT a vegetable item:", a: "Candy", o: ["Carrot", "Onion", "Tomato", "Candy"] },
+      { q: "Identify the item that is NOT a meat product:", a: "Banana", o: ["Fish", "Chicken", "Meat", "Banana"] },
+      { q: "Identify the item that is NOT used to pack groceries:", a: "Receipt", o: ["Bag", "Box", "Receipt", "Cart"] },
+      { q: "Identify the item that does NOT show pricing or numbers:", a: "Soda", o: ["Price", "Receipt", "Soda", "Coin"] },
+      { q: "Identify the item that is NOT a breakfast condiment:", a: "Shampoo", o: ["Honey", "Butter", "Jam", "Shampoo"] },
+      { q: "Identify the item that is NOT a salty snack:", a: "Chocolate", o: ["Popcorn", "Chips", "Chocolate", "Crackers"] },
+      { q: "Identify the item that is NOT fresh raw production:", a: "Soda Can", o: ["Potato", "Soda Can", "Apple", "Carrot"] },
+      { q: "Identify the item that is NOT standard grocery store staff:", a: "Doctor", o: ["Cashier", "Manager", "Doctor", "Cleaner"] }
+    ];
+
+    /* --- DATA UTAMA WORD SEARCH (10 POOL KATA KUNCI) --- */
+    const dbShopping = [
+      { name: "SANDWICH", emoji: "🥪", cells: [{r:0,c:1},{r:1,c:1},{r:2,c:1},{r:3,c:1},{r:4,c:1},{r:5,c:1},{r:6,c:1},{r:7,c:1}] }, 
+      { name: "BANANA", emoji: "🍌", cells: [{r:9,c:4},{r:9,c:5},{r:9,c:6},{r:9,c:7},{r:9,c:8},{r:9,c:9}] }, 
+      { name: "MILK", emoji: "🥛", cells: [{r:1,c:5},{r:1,c:6},{r:1,c:7},{r:1,c:8}] }, 
+      { name: "PEAS", emoji: "🫛", cells: [{r:4,c:3},{r:5,c:3},{r:6,c:3},{r:7,c:3}] }, 
+      { name: "BREAD", emoji: "🍞", cells: [{r:3,c:5},{r:4,c:5},{r:5,c:5},{r:6,c:5},{r:7,c:5}] }, 
+      { name: "HONEY", emoji: "🍯", cells: [{r:0,c:4},{r:0,c:5},{r:0,c:6},{r:0,c:7},{r:0,c:8}] }, 
+      { name: "SODA", emoji: "🥤", cells: [{r:2,c:9},{r:3,c:9},{r:4,c:9},{r:5,c:9}] }, 
+      { name: "CAKE", emoji: "🍰", cells: [{r:8,c:0},{r:8,c:1},{r:8,c:2},{r:8,c:3}] }, 
+      { name: "EGG", emoji: "🥚", cells: [{r:4,c:6},{r:4,c:7},{r:4,c:8}] } 
+    ];
+
+    const staticWordSearchGridMatrix = [
+  ['X','S','Q','W','H','O','N','E','Y','Z'], 
+  ['R','A','V','B','T','M','I','L','K','P'], 
+  ['K','N','L','M','G','K','J','H','F','S'], 
+  ['P','D','X','Q','F','B','R','V','T','O'], 
+  ['M','W','S','P','Z','R','E','G','G','D'], 
+  ['L','I','O','E','J','E','I','C','E','A'], // Baris 5, Kolom 5 diubah jadi 'E'
+  ['K','C','K','A','V','A','X','Q','W','M'], // Baris 6, Kolom 5 diubah jadi 'A'
+  ['G','H','P','S','T','D','B','N','M','K'], // Baris 7, Kolom 5 diubah jadi 'D'
+  ['C','A','K','E','Z','X','C','V','B','N'], 
+  ['Q','W','E','R','B','A','N','A','N','A']  
+];
+
+    /* --- GLOBAL CONFIGS & PERMUTATIONS --- */
+    let playerMode = 1; let players = []; let activeMode = '';
+    let activeQuestionIndex = 0; let currentPlayerIndex = 0;
+    
+    // VARIABEL POOL PERTANYAAN TERPISAH TIAP PLAYER
+    let playerPools = [[], []]; 
+    let playerDiscoveredRegistries = [[], []]; 
+    let isOverlayIntermissionActive = false;
+
+    let isTimerEnabled = false;
+    let timerCountdownInterval = null;
+    let timeRemainingTicks = 300; 
+
+    let dropAnimationInterval = null; let soundtrackInterval = null;
+    let selectedCellChainCoords = [];
+    let matchSelection = null;
+
+    const soundContext = new (window.AudioContext || window.webkitAudioContext)();
+    function triggerAudioTone(preset) {
+      const osc = soundContext.createOscillator(); const gain = soundContext.createGain();
+      osc.connect(gain); gain.connect(soundContext.destination);
+      if (preset === 'correct') {
+        osc.frequency.setValueAtTime(587.33, soundContext.currentTime); osc.frequency.setValueAtTime(880, soundContext.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, soundContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.005, soundContext.currentTime + 0.3);
+        osc.start(); osc.stop(soundContext.currentTime + 0.3);
+      } else if (preset === 'wrong') {
+        osc.frequency.setValueAtTime(293.66, soundContext.currentTime); osc.frequency.setValueAtTime(220, soundContext.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.15, soundContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.005, soundContext.currentTime + 0.35);
+        osc.start(); osc.stop(soundContext.currentTime + 0.35);
+      } else if (preset === 'click') {
+        osc.frequency.setValueAtTime(440, soundContext.currentTime); gain.gain.setValueAtTime(0.05, soundContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, soundContext.currentTime + 0.05);
+        osc.start(); osc.stop(soundContext.currentTime + 0.05);
+      }
+    }
+
+    function startSoundtrack() {
+      if (soundtrackInterval) return;
+      let noteSeq = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; let beat = 0;
+      soundtrackInterval = setInterval(() => {
+        const osc = soundContext.createOscillator(); const gain = soundContext.createGain();
+        osc.connect(gain); gain.connect(soundContext.destination); osc.type = 'triangle';
+        osc.frequency.setValueAtTime(noteSeq[beat % noteSeq.length], soundContext.currentTime);
+        gain.gain.setValueAtTime(0.012, soundContext.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, soundContext.currentTime + 0.4);
+        osc.start(); osc.stop(soundContext.currentTime + 0.4); beat++;
+      }, 550);
+    }
+
+    function toggleTimerMode(enable) {
+      triggerAudioTone('click');
+      isTimerEnabled = enable;
+      document.getElementById('timer-off').classList.toggle('active', !enable);
+      document.getElementById('timer-on').classList.toggle('active', enable);
+    }
+
+    function startQuestionTimer(timeoutCallback, customTicks = 300) {
+      clearInterval(timerCountdownInterval);
+      if (!isTimerEnabled) {
+        document.getElementById('global-timer-container').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('global-timer-container').style.display = 'block';
+      timeRemainingTicks = customTicks; 
+      const bar = document.getElementById('global-timer-bar');
+      bar.style.width = '100%';
+
+      timerCountdownInterval = setInterval(() => {
+        if(isOverlayIntermissionActive) return; 
+        timeRemainingTicks--;
+        bar.style.width = (timeRemainingTicks / (customTicks / 100)) + '%';
+
+        if (timeRemainingTicks <= 0) {
+          clearInterval(timerCountdownInterval);
+          triggerAudioTone('wrong');
+          timeoutCallback();
+        }
+      }, 100);
+    }
+
+    function stopQuestionTimer() {
+      clearInterval(timerCountdownInterval);
+      document.getElementById('global-timer-container').style.display = 'none';
+    }
+
+    function setPlayerMode(mode) {
+      triggerAudioTone('click'); playerMode = mode;
+      document.getElementById('tab-1p').classList.toggle('active', mode === 1);
+      document.getElementById('tab-2p').classList.toggle('active', mode === 2);
+      document.getElementById('username-p2').style.display = mode === 2 ? 'block' : 'none';
+    }
+
+    function renderScreen(id) {
+      document.querySelectorAll('.screen').forEach(scr => scr.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      startSoundtrack();
+    }
+
+    function processLogin() {
+      triggerAudioTone('click');
+      const name1 = document.getElementById('username-p1').value.trim() || "Player 1";
+      players = [{ name: name1, score: 0 }];
+      if (playerMode === 2) {
+        const name2 = document.getElementById('username-p2').value.trim() || "Player 2";
+        players.push({ name: name2, score: 0 });
+      }
+      renderScreen('screen-menu');
+    }
+
+    function abortToLobby() {
+      triggerAudioTone('click');
+      clearInterval(dropAnimationInterval);
+      stopQuestionTimer();
+      document.getElementById('turn-switch-panel').style.display = 'none';
+      isOverlayIntermissionActive = false;
+      renderScreen('screen-menu');
+    }
+
+    function initiateSession(mode) {
+      triggerAudioTone('click'); activeMode = mode; activeQuestionIndex = 0; currentPlayerIndex = 0;
+      let baseDB = [];
+      if (mode === 'falling') baseDB = dbFalling;
+      else if (mode === 'match') baseDB = dbMatch;
+      else if (mode === 'odd') baseDB = dbOdd;
+      else if (mode === 'shopping') baseDB = dbShopping;
+
+      playerPools[0] = [...baseDB].sort(() => 0.5 - Math.random()).slice(0, 5);
+      playerPools[1] = [...baseDB].sort(() => 0.5 - Math.random()).slice(0, 5);
+      playerDiscoveredRegistries = [[], []]; 
+
+      advanceGameTurn();
+    }
+
+    function advanceGameTurn() {
+      if (activeQuestionIndex >= 5) { displayFinalScoreboard(); return; }
+      
+      if (activeMode === 'odd') { renderScreen('screen-standard'); loadOddOneOutTurn(); }
+      else if (activeMode === 'falling') { renderScreen('screen-falling-game'); loadFallingTurn(); }
+      else if (activeMode === 'match') { renderScreen('screen-match-game'); loadMatchTurn(); }
+      else if (activeMode === 'shopping') { renderScreen('screen-shopping'); loadShoppingListTurn(); }
+    }
+
+    /* --- ODD ONE OUT --- */
+    function loadOddOneOutTurn() {
+      const data = playerPools[currentPlayerIndex][activeQuestionIndex];
+      document.getElementById('std-turn-box').innerText = `👤 Turn: ${players[currentPlayerIndex].name}`;
+      document.getElementById('game-progress').innerText = `Question ${activeQuestionIndex + 1} / 5`;
+      
+      const contentArea = document.getElementById('game-content-area');
+      const optionsArea = document.getElementById('game-options-area');
+      optionsArea.innerHTML = '';
+
+      contentArea.innerHTML = `
+        <div style="font-size:1.15rem; margin-bottom:10px; opacity:0.9;">${data.q}</div>
+        <div style="font-size:1.3rem; color:var(--accent-green); letter-spacing:0.5px;">[ ${data.o.join('  |  ')} ]</div>
+        <div class="box-sticker-icon">🥛</div>
+      `;
+
+      startQuestionTimer(() => {
+        document.querySelectorAll('#game-options-area .option-btn').forEach(b => b.disabled = true);
+        document.querySelectorAll('#game-options-area .option-btn').forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); });
+        setTimeout(handleTurnProgression, 1500);
+      });
+
+      let shufOptions = [...data.o].sort(() => 0.5 - Math.random());
+      shufOptions.forEach(opt => {
+        const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = opt;
+        btn.onclick = () => {
+          stopQuestionTimer();
+          document.querySelectorAll('#game-options-area .option-btn').forEach(b => b.disabled = true);
+          if (opt === data.a) { 
+            btn.classList.add('correct'); players[currentPlayerIndex].score += 20; triggerAudioTone('correct'); 
+          } else { 
+            btn.classList.add('wrong'); triggerAudioTone('wrong'); 
+            document.querySelectorAll('#game-options-area .option-btn').forEach(b => { if(b.innerText === data.a) b.classList.add('correct'); }); 
+          }
+          setTimeout(handleTurnProgression, 1500);
+        };
+        optionsArea.appendChild(btn);
+      });
+    }
+
+    /* --- FALLING WORDS --- */
+    function loadFallingTurn() {
+      clearInterval(dropAnimationInterval);
+      stopQuestionTimer(); 
+      const data = playerPools[currentPlayerIndex][activeQuestionIndex];
+      document.getElementById('fall-turn-box').innerText = `👤 Turn: ${players[currentPlayerIndex].name}`;
+      document.getElementById('falling-progress').innerText = `Question ${activeQuestionIndex + 1} / 5`;
+
+      const track = document.getElementById('falling-track-space');
+      const optArea = document.getElementById('falling-options-area');
+      track.innerHTML = ''; optArea.innerHTML = '';
+
+      const dropEl = document.createElement('div'); dropEl.className = 'drifting-item'; dropEl.innerText = data.word;
+      dropEl.style.left = "35%"; dropEl.style.top = "0px"; track.appendChild(dropEl);
+
+      let topY = 0; let isActive = true;
+      dropAnimationInterval = setInterval(() => {
+        if (isOverlayIntermissionActive) return;
+        topY += 1.4; dropEl.style.top = topY + "px";
+        if (topY >= (track.clientHeight - dropEl.clientHeight)) {
+          clearInterval(dropAnimationInterval);
+          if (isActive) { isActive = false; triggerAudioTone('wrong'); evaluateFallSelection(null, data.a); }
+        }
+      }, 20);
+
+      [...data.o].sort(() => 0.5 - Math.random()).forEach(opt => {
+        const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = opt;
+        btn.onclick = () => {
+          if (!isActive) return; isActive = false; clearInterval(dropAnimationInterval);
+          if (opt === data.a) { 
+            btn.classList.add('correct'); dropEl.style.backgroundColor = 'var(--correct-ans)'; players[currentPlayerIndex].score += 20; triggerAudioTone('correct'); 
+          } else { 
+            btn.classList.add('wrong'); dropEl.style.backgroundColor = 'var(--wrong-ans)'; triggerAudioTone('wrong'); 
+          }
+          evaluateFallSelection(btn, data.a);
+        };
+        optArea.appendChild(btn);
+      });
+    }
+
+    function evaluateFallSelection(btn, correctVal) {
+      document.querySelectorAll('#falling-options-area .option-btn').forEach(b => b.disabled = true);
+      document.querySelectorAll('#falling-options-area .option-btn').forEach(b => { if (b.innerText === correctVal) b.classList.add('correct'); });
+      setTimeout(handleTurnProgression, 1500);
+    }
+
+    /* --- WORD MATCH EMOJI --- */
+    let temporaryPairs = [];
+    function loadMatchTurn() {
+      const data = playerPools[currentPlayerIndex][activeQuestionIndex];
+      document.getElementById('match-turn-box').innerText = `👤 Turn: ${players[currentPlayerIndex].name}`;
+      document.getElementById('match-progress').innerText = `Question ${activeQuestionIndex + 1} / 5`;
+      document.getElementById('btn-submit-match').style.display = 'none';
+
+      const leftCol = document.getElementById('match-left-col'); leftCol.innerHTML = '';
+      const rightCol = document.getElementById('match-right-col'); rightCol.innerHTML = '';
+      matchSelection = null; temporaryPairs = [];
+
+      let leftArr = data.pairs.map(p => p.l).sort(() => 0.5 - Math.random());
+      let rightArr = data.pairs.map(p => p.r).sort(() => 0.5 - Math.random());
+
+      leftArr.forEach(val => {
+        const node = document.createElement('div'); node.className = 'match-node'; node.innerText = val; node.style.fontSize = "1.6rem";
+        node.onclick = () => linkMatchNode(node, 'L'); leftCol.appendChild(node);
+      });
+      rightArr.forEach(val => {
+        const node = document.createElement('div'); node.className = 'match-node'; node.innerText = val;
+        node.onclick = () => linkMatchNode(node, 'R'); rightCol.appendChild(node);
+      });
+
+      startQuestionTimer(() => {
+        document.querySelectorAll('.match-node').forEach(n => n.classList.add('wrong'));
+        setTimeout(handleTurnProgression, 1500);
+      });
+    }
+
+    function linkMatchNode(node, side) {
+      triggerAudioTone('click');
+      if (node.classList.contains('paired')) return;
+
+      if (matchSelection === null) {
+        matchSelection = { node, side }; node.classList.add('selected');
+      } else {
+        if (matchSelection.side === side) {
+          matchSelection.node.classList.remove('selected');
+          matchSelection = { node, side }; node.classList.add('selected');
+          return;
+        }
+        
+        node.classList.add('paired'); matchSelection.node.classList.add('paired');
+        matchSelection.node.classList.remove('selected');
+
+        temporaryPairs.push({
+          left: side === 'R' ? matchSelection.node.innerText : node.innerText,
+          right: side === 'R' ? node.innerText : matchSelection.node.innerText,
+          leftNode: side === 'R' ? matchSelection.node : node,
+          rightNode: side === 'R' ? node : matchSelection.node
+        });
+
+        matchSelection = null;
+        if (temporaryPairs.length === 3) {
+          stopQuestionTimer(); 
+          document.getElementById('btn-submit-match').style.display = 'block';
+        }
+      }
+    }
+
+    function evaluateFinalMatchPairs() {
+      document.getElementById('btn-submit-match').style.display = 'none';
+      let totalCorrect = 0;
+      const data = playerPools[currentPlayerIndex][activeQuestionIndex];
+
+      temporaryPairs.forEach(pair => {
+        let found = data.pairs.find(p => p.l === pair.left && p.r === pair.right);
+        if (found) {
+          totalCorrect++;
+          pair.leftNode.classList.add('correct'); pair.rightNode.classList.add('correct');
+        } else {
+          pair.leftNode.classList.add('wrong'); pair.rightNode.classList.add('wrong');
+        }
+      });
+
+      if (totalCorrect === 3) { players[currentPlayerIndex].score += 20; triggerAudioTone('correct'); }
+      else { triggerAudioTone('wrong'); }
+
+      setTimeout(handleTurnProgression, 1800);
+    }
+
+    //
+function loadShoppingListTurn() {
+  const activePool = playerPools[currentPlayerIndex];
+  const activeRegistry = playerDiscoveredRegistries[currentPlayerIndex];
+
+  document.getElementById('shop-turn-box').innerText = `👤 Turn: ${players[currentPlayerIndex].name}`;
+  document.getElementById('shop-progress').innerText = `Found: ${activeRegistry.length} / 5 Words`;
+  
+  selectedCellChainCoords = [];
+  document.getElementById('wsearch-preview').innerText = "SELECT...";
+
+  const clueBox = document.getElementById('wsearch-clue-container');
+  clueBox.innerHTML = '';
+  activePool.forEach(item => {
+    const isFound = activeRegistry.includes(item.name);
+    clueBox.innerHTML += `
+      <div class="clue-card ${isFound ? 'found' : ''}" id="clue-card-${item.name}">
+        ${item.emoji}
+      </div>
+    `;
+  });
+
+  const gridBoard = document.getElementById('wsearch-grid-board');
+  gridBoard.innerHTML = '';
+  gridBoard.style.pointerEvents = 'auto'; // Pastikan grid bisa diklik
+  
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'grid-cell';
+      cell.innerText = staticWordSearchGridMatrix[r][c];
+      cell.setAttribute('data-row', r);
+      cell.setAttribute('data-col', c);
+      
+      if (isCoordinateAlreadyDiscovered(r, c)) {
+        cell.classList.add('highlighted');
+      }
+
+      cell.onclick = () => {
+        if (isCoordinateAlreadyDiscovered(r, c)) return;
+        triggerAudioTone('click');
+        
+        const cellIndex = selectedCellChainCoords.findIndex(coord => coord.r === r && coord.c === c);
+        if (cellIndex !== -1) {
+          selectedCellChainCoords.splice(cellIndex, 1);
+        } else {
+          selectedCellChainCoords.push({ r, c, letter: staticWordSearchGridMatrix[r][c] });
+        }
+        updateWordSearchUIEffects();
+      };
+      gridBoard.appendChild(cell);
+    }
+  }
+
+  // --- LOGIKA TIMED PENALTY ---
+  startQuestionTimer(() => {
+    // 1. Kunci Grid
+    gridBoard.style.pointerEvents = 'none';
+    
+    // 2. Berikan Visual Feedback Merah pada clue yang belum ketemu
+    activePool.forEach(item => {
+      if (!activeRegistry.includes(item.name)) {
+        const card = document.getElementById(`clue-card-${item.name}`);
+        if (card) card.classList.add('wrong');
+      }
+    });
+
+    // 3. Jeda 1.5 detik lalu ganti giliran
+    setTimeout(() => {
+      triggerAudioTone('wrong');
+      switchPlayerDuelTurn();
+    }, 1500);
+  }, 300); // 300 ticks = 30 detik
+}
+
+    function updateWordSearchUIEffects() {
+      document.querySelectorAll('.grid-cell').forEach(el => {
+        if (!el.classList.contains('highlighted')) {
+          el.classList.remove('selected');
+        }
+      });
+      
+      let previewStr = "";
+      selectedCellChainCoords.forEach(coord => {
+        previewStr += coord.letter;
+        const targetCellEl = document.querySelector(`.grid-cell[data-row='${coord.r}'][data-col='${coord.c}']`);
+        if (targetCellEl) targetCellEl.classList.add('selected');
+      });
+
+      document.getElementById('wsearch-preview').innerText = previewStr || "SELECT...";
+    }
+
+    function clearSelectedWordChain() {
+      triggerAudioTone('click');
+      selectedCellChainCoords = [];
+      document.querySelectorAll('.grid-cell').forEach(el => {
+        if (!el.classList.contains('highlighted')) {
+          el.classList.remove('selected');
+        }
+      });
+      document.getElementById('wsearch-preview').innerText = "SELECT...";
+    }
+
+    function validateCurrentWordChain() {
+      if (selectedCellChainCoords.length === 0) return;
+
+      const activePool = playerPools[currentPlayerIndex];
+      const activeRegistry = playerDiscoveredRegistries[currentPlayerIndex];
+      let matchedItem = null;
+
+      for (let item of activePool) {
+        if (activeRegistry.includes(item.name)) continue;
+        
+        if (item.cells.length === selectedCellChainCoords.length) {
+          let allCellsMatch = item.cells.every(c => 
+            selectedCellChainCoords.some(sc => sc.r === c.r && sc.c === c.c)
+          );
+          if (allCellsMatch) {
+            matchedItem = item;
+            break;
+          }
+        }
+      }
+      
+      if (matchedItem) {
+        stopQuestionTimer();
+        triggerAudioTone('correct');
+        
+        activeRegistry.push(matchedItem.name);
+        players[currentPlayerIndex].score += 30;
+
+        document.getElementById(`clue-card-${matchedItem.name}`).classList.add('found');
+
+        if (activeRegistry.length === 5) {
+          if (playerMode === 2 && playerDiscoveredRegistries[0].length === 5 && playerDiscoveredRegistries[1].length === 5) {
+            displayFinalScoreboard();
+          } else {
+            switchPlayerDuelTurn();
+          }
+        } else {
+          loadShoppingListTurn();
+        }
+      } else {
+        triggerAudioTone('wrong');
+        const previewEl = document.getElementById('wsearch-preview');
+        previewEl.style.backgroundColor = 'var(--wrong-ans)';
+        setTimeout(() => {
+          previewEl.style.backgroundColor = 'var(--dark-charcoal)';
+          clearSelectedWordChain();
+        }, 500);
+      }
+    }
+
+    function isCoordinateAlreadyDiscovered(r, c) {
+      const activeRegistry = playerDiscoveredRegistries[currentPlayerIndex];
+      for (let word of activeRegistry) {
+        const targetData = dbShopping.find(item => item.name === word);
+        if (targetData) {
+          const isMatchedCell = targetData.cells.some(cell => cell.r === r && cell.c === c);
+          if (isMatchedCell) return true;
+        }
+      }
+      return false;
+    }
+
+    /* --- ALUR GLOBAL TURN CONTROLLER MULTIPLAYER + NOTIFIKASI OVERLAY GANTIAN --- */
+    function handleTurnProgression() {
+      if (playerMode === 2) {
+        if (currentPlayerIndex === 0) {
+          currentPlayerIndex = 1;
+          triggerOverlaySwitchAnimation();
+        } else {
+          currentPlayerIndex = 0;
+          activeQuestionIndex++; 
+          if (activeQuestionIndex >= 5) {
+            displayFinalScoreboard();
+          } else {
+            triggerOverlaySwitchAnimation();
+          }
+        }
+      } else {
+        activeQuestionIndex++;
+        advanceGameTurn();
+      }
+    }
+
+    function switchPlayerDuelTurn() {
+      if (playerMode === 2) {
+        let nextPlayerIndex = (currentPlayerIndex === 0) ? 1 : 0;
+        
+        if (playerDiscoveredRegistries[nextPlayerIndex].length === 5) {
+          loadShoppingListTurn();
+          return;
+        }
+        currentPlayerIndex = nextPlayerIndex;
+        triggerOverlaySwitchAnimation();
+      } else {
+        if (playerDiscoveredRegistries[0].length === 5) {
+          displayFinalScoreboard();
+        } else {
+          loadShoppingListTurn();
+        }
+      }
+    }
+
+    function triggerOverlaySwitchAnimation() {
+      isOverlayIntermissionActive = true;
+      stopQuestionTimer();
+      clearInterval(dropAnimationInterval);
+
+      document.getElementById('ts-player-title').innerText = `🕰️ ${players[currentPlayerIndex].name} Turn`;
+      document.getElementById('ts-player-desc').innerText = `Pass the device and click the button to start!`;
+      document.getElementById('turn-switch-panel').style.display = 'flex';
+    }
+
+    function confirmReadyForNextTurn() {
+      triggerAudioTone('click');
+      document.getElementById('turn-switch-panel').style.display = 'none';
+      isOverlayIntermissionActive = false;
+      advanceGameTurn();
+    }
+
+    /* --- LEADERBOARD & STORAGE ENGINE --- */
+    function displayFinalScoreboard() {
+      clearInterval(dropAnimationInterval);
+      stopQuestionTimer();
+      const wrap = document.getElementById('score-results-wrapper'); wrap.innerHTML = '';
+      
+      players.forEach(p => {
+        wrap.innerHTML += `
+          <div style="margin:12px 0; padding:15px; background:rgba(255,255,255,0.6); border-radius:15px; border:1px solid rgba(27,67,50,0.1);">
+            <p style="font-size:1.25rem; font-weight:800; color:var(--dark-charcoal)">🎯 ${p.name}</p>
+            <div class="score-circle">${p.score}</div>
+          </div>
+        `;
+        savePlayerScoreRecord(p.name, p.score);
+      });
+      renderScreen('screen-score');
+    }
+
+    function savePlayerScoreRecord(name, score) {
+      let database = JSON.parse(localStorage.getItem('minimarket_leaderboard')) || [];
+      let matchPlayer = database.find(entry => entry.name.toLowerCase() === name.toLowerCase());
+      
+      if (matchPlayer) {
+        if (score > matchPlayer.highScore) matchPlayer.highScore = score;
+      } else {
+        database.push({ name: name, highScore: score });
+      }
+      
+      database.sort((x, y) => y.highScore - x.highScore);
+      localStorage.setItem('minimarket_leaderboard', JSON.stringify(database.slice(0, 5)));
+    }
+
+    function openLeaderboardScreen() {
+      triggerAudioTone('click');
+      const tbody = document.getElementById('leaderboard-rows');
+      tbody.innerHTML = '';
+
+      let records = JSON.parse(localStorage.getItem('minimarket_leaderboard')) || [];
+      
+      if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; opacity:0.6; font-weight:700; padding:20px;">No record data yet. Play a game to match highscores!</td></tr>`;
+      } else {
+        records.forEach((player, idx) => {
+          tbody.innerHTML += `
+            <tr>
+              <td style="font-weight:900;">#${idx + 1}</td>
+              <td style="font-weight:700;">${player.name}</td>
+              <td style="font-weight:900; color:var(--accent-green);">${player.highScore} pts</td>
+            </tr>
+          `;
+        });
+      }
+      renderScreen('screen-leaderboard');
+    }
+
+    function returnToMainMenu() {
+      triggerAudioTone('click'); renderScreen('screen-menu');
+    }
+  </script>
 </body>
 </html>

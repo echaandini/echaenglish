@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echa's English Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ===== CSS VARIABLES ===== */
+  :root {
+    --pink-main: #e91e8c;
+    --pink-light: #ff6eb4;
+    --pink-pale: #ffd6ec;
+    --pink-ultra: #fff0f8;
+    --white: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.25);
+    --glass-border: rgba(255, 255, 255, 0.45);
+    --glass-shadow: rgba(233, 30, 140, 0.15);
+    --correct: #22c55e;
+    --wrong: #ef4444;
+    --text-dark: #5a1a3a;
+    --text-mid: #8b3a6a;
+    --radius-lg: 24px;
+    --radius-xl: 36px;
+    --transition: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fce4f3 0%, #f9c4e4 30%, #fde8f4 60%, #f5c6e8 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Decorative blobs */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(233,30,140,0.25), transparent 70%);
+    top: -100px; left: -100px;
+  }
+  body::after {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,110,180,0.2), transparent 70%);
+    bottom: -150px; right: -150px;
+  }
+
+  /* ===== GLASS CARD ===== */
+  .glass {
+    background: rgba(255,255,255,0.35);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1.5px solid rgba(255,255,255,0.55);
+    box-shadow: 0 8px 40px rgba(233,30,140,0.12), inset 0 1px 0 rgba(255,255,255,0.6);
+    border-radius: var(--radius-xl);
+  }
+
+  /* ===== PAGES ===== */
+  .page { display: none; min-height: 100vh; position: relative; z-index: 1; }
+  .page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; animation: fadeSlide 0.45s ease forwards; }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ===== HEADER SCORE BAR ===== */
+  .score-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.4);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    box-shadow: 0 2px 20px rgba(233,30,140,0.08);
+  }
+  .score-bar .brand {
+    font-family: 'Pacifico', cursive;
+    font-size: 1.15rem;
+    color: var(--pink-main);
+    text-shadow: 0 1px 8px rgba(233,30,140,0.2);
+  }
+  .score-display {
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-light));
+    color: white;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 14px rgba(233,30,140,0.35);
+  }
+  .score-display .star { font-size: 1rem; }
+
+  /* ===== LOBBY ===== */
+  #lobby { padding-top: 80px; }
+
+  .lobby-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+  .lobby-header .title {
+    font-family: 'Pacifico', cursive;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .lobby-header .subtitle {
+    color: var(--text-mid);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .game-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .game-card {
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(233,30,140,0.08), rgba(255,110,180,0.04));
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-radius: inherit;
+  }
+  .game-card:hover::before { opacity: 1; }
+  .game-card:hover { transform: translateY(-8px); box-shadow: 0 20px 50px rgba(233,30,140,0.2), inset 0 1px 0 rgba(255,255,255,0.7); }
+  .game-card:active { transform: translateY(-2px) scale(0.98); }
+
+  .card-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 14px;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(233,30,140,0.2));
+    animation: float 3s ease-in-out infinite;
+  }
+  .game-card:nth-child(2) .card-emoji { animation-delay: 0.5s; }
+  .game-card:nth-child(3) .card-emoji { animation-delay: 1s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .card-title {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--pink-main);
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    line-height: 1.5;
+    font-weight: 600;
+  }
+  .play-btn {
+    margin-top: 18px;
+    display: inline-block;
+    padding: 10px 28px;
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-light));
+    color: white;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 16px rgba(233,30,140,0.35);
+    transition: box-shadow 0.3s, transform 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .game-card:hover .play-btn { box-shadow: 0 8px 24px rgba(233,30,140,0.45); transform: scale(1.05); }
+
+  /* ===== GAME CONTAINER ===== */
+  .game-container {
+    width: 100%; max-width: 680px;
+    padding-top: 80px;
+  }
+
+  .game-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .back-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.5);
+    border: 1.5px solid var(--glass-border);
+    color: var(--pink-main);
+    padding: 8px 16px;
+    border-radius: 50px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s;
+    backdrop-filter: blur(10px);
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.7); transform: translateX(-3px); }
+
+  .game-title-badge {
+    font-family: 'Pacifico', cursive;
+    font-size: 1.1rem;
+    color: var(--white);
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-light));
+    padding: 8px 20px;
+    border-radius: 50px;
+    box-shadow: 0 4px 16px rgba(233,30,140,0.3);
+  }
+
+  .game-progress {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-mid); font-weight: 700; font-size: 0.9rem;
+  }
+
+  /* ===== QUESTION BOX ===== */
+  .question-box {
+    padding: 36px 28px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* ===== GAME 1: PICTURE WORD MATCH ===== */
+  .big-emoji {
+    font-size: clamp(4rem, 15vw, 7rem);
+    display: block;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 6px 16px rgba(233,30,140,0.25));
+    animation: emojiPop 0.5s var(--transition);
+  }
+  @keyframes emojiPop {
+    from { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .prompt-text {
+    font-size: 1rem;
+    color: var(--text-mid);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .choices-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .choice-btn {
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.5);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.25s var(--transition);
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+  }
+  .choice-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-light));
+    opacity: 0; transition: opacity 0.25s; border-radius: inherit;
+  }
+  .choice-btn:hover:not(:disabled)::after { opacity: 0.08; }
+  .choice-btn:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--pink-light); box-shadow: 0 8px 20px rgba(233,30,140,0.18); }
+  .choice-btn:active:not(:disabled) { transform: scale(0.97); }
+  .choice-btn.correct { background: rgba(34,197,94,0.2); border-color: var(--correct); color: #15803d; transform: scale(1.03); }
+  .choice-btn.wrong   { background: rgba(239,68,68,0.15); border-color: var(--wrong); color: #dc2626; }
+  .choice-btn:disabled { cursor: not-allowed; }
+
+  /* ===== GAME 2: ODD ONE OUT ===== */
+  .odd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .odd-btn {
+    padding: 22px 16px;
+    border-radius: 18px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.45);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.28s var(--transition);
+    backdrop-filter: blur(10px);
+    text-align: center;
+  }
+  .odd-btn:hover:not(:disabled) { transform: translateY(-4px) rotate(-1deg); border-color: var(--pink-light); box-shadow: 0 10px 24px rgba(233,30,140,0.2); background: rgba(255,255,255,0.65); }
+  .odd-btn:active:not(:disabled) { transform: scale(0.96); }
+  .odd-btn.correct { background: rgba(34,197,94,0.2); border-color: var(--correct); color: #15803d; transform: scale(1.04) rotate(0deg); }
+  .odd-btn.wrong   { background: rgba(239,68,68,0.15); border-color: var(--wrong); color: #dc2626; }
+  .odd-btn:disabled { cursor: not-allowed; }
+
+  /* ===== GAME 3: FALLING WORD ===== */
+  .falling-area {
+    position: relative;
+    height: 280px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.2);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    backdrop-filter: blur(8px);
+  }
+  .translate-prompt {
+    text-align: center;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 12px;
+    color: var(--text-mid);
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  .falling-word {
+    position: absolute;
+    left: 50%; transform: translateX(-50%);
+    font-size: clamp(1.8rem, 6vw, 2.8rem);
+    font-weight: 900;
+    color: var(--pink-main);
+    text-shadow: 0 2px 12px rgba(233,30,140,0.3);
+    font-family: 'Pacifico', cursive;
+    white-space: nowrap;
+    transition: none;
+    letter-spacing: 0.02em;
+  }
+  .danger-zone {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--wrong), transparent);
+    border-radius: 0 0 20px 20px;
+  }
+  .catch-btns {
+    display: flex; gap: 10px; margin-top: 16px;
+  }
+  .catch-btn {
+    flex: 1;
+    padding: 16px 10px;
+    border-radius: 16px;
+    border: 2px solid rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.45);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.25s var(--transition);
+    backdrop-filter: blur(8px);
+    text-align: center;
+  }
+  .catch-btn:hover:not(:disabled) { transform: translateY(-4px); border-color: var(--pink-light); background: rgba(255,255,255,0.65); box-shadow: 0 8px 20px rgba(233,30,140,0.18); }
+  .catch-btn:active:not(:disabled) { transform: scale(0.96); }
+  .catch-btn.correct { background: rgba(34,197,94,0.2); border-color: var(--correct); color: #15803d; }
+  .catch-btn.wrong   { background: rgba(239,68,68,0.15); border-color: var(--wrong); color: #dc2626; }
+  .catch-btn.timeout { background: rgba(239,68,68,0.15); border-color: var(--wrong); }
+  .catch-btn:disabled { cursor: not-allowed; }
+
+  .speed-bar-wrap {
+    height: 8px; border-radius: 50px;
+    background: rgba(255,255,255,0.3);
+    overflow: hidden; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .speed-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--correct), #86efac);
+    border-radius: 50px;
+    transition: width 0.1s linear, background 0.3s;
+  }
+
+  /* ===== FEEDBACK OVERLAY ===== */
+  .feedback-overlay {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .feedback-overlay.show { opacity: 1; }
+  .feedback-pill {
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    font-weight: 900;
+    color: white;
+    padding: 18px 40px;
+    border-radius: 50px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    animation: pillPop 0.4s var(--transition);
+    font-family: 'Nunito', sans-serif;
+  }
+  .feedback-pill.correct-pill { background: linear-gradient(135deg, #22c55e, #16a34a); }
+  .feedback-pill.wrong-pill   { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  @keyframes pillPop {
+    from { transform: scale(0.5) translateY(20px); }
+    to   { transform: scale(1) translateY(0); }
+  }
+
+  /* ===== SCORE POPUP ===== */
+  .score-anim {
+    position: fixed; top: 60px; right: 20px;
+    font-size: 1.4rem; font-weight: 900;
+    color: var(--pink-main);
+    pointer-events: none;
+    z-index: 999;
+    animation: scoreFloat 1.2s ease forwards;
+    text-shadow: 0 2px 10px rgba(233,30,140,0.3);
+  }
+  @keyframes scoreFloat {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    60%  { opacity: 1; transform: translateY(-40px) scale(1.2); }
+    100% { opacity: 0; transform: translateY(-70px) scale(0.8); }
+  }
+
+  /* ===== ROUND COMPLETE ===== */
+  .round-complete {
+    text-align: center;
+    padding: 40px 28px;
+  }
+  .complete-emoji { font-size: 4rem; margin-bottom: 16px; display: block; animation: float 2s ease-in-out infinite; }
+  .complete-title { font-family: 'Pacifico', cursive; font-size: 1.8rem; color: var(--pink-main); margin-bottom: 8px; }
+  .complete-sub   { color: var(--text-mid); font-weight: 700; margin-bottom: 24px; }
+  .complete-score { font-size: 2.5rem; font-weight: 900; color: var(--pink-main); margin-bottom: 6px; }
+  .complete-label { color: var(--text-mid); font-weight: 600; font-size: 0.9rem; margin-bottom: 28px; }
+  .action-btns    { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary, .btn-secondary {
+    padding: 12px 28px; border-radius: 50px; font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: 0.95rem; cursor: pointer; transition: all 0.25s;
+    border: none;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--pink-main), var(--pink-light)); color: white; box-shadow: 0 6px 20px rgba(233,30,140,0.35); }
+  .btn-primary:hover { box-shadow: 0 10px 28px rgba(233,30,140,0.45); transform: translateY(-2px); }
+  .btn-secondary { background: rgba(255,255,255,0.6); color: var(--pink-main); border: 2px solid rgba(255,255,255,0.7); backdrop-filter: blur(8px); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.8); transform: translateY(-2px); }
+
+  /* ===== CREATOR FOOTER ===== */
+  .creator-tag {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 50;
+    background: rgba(255,255,255,0.35);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 50px;
+    padding: 6px 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--pink-main);
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(233,30,140,0.1);
+  }
+  .creator-tag .heart { color: var(--pink-light); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 500px) {
+    .game-cards { grid-template-columns: 1fr; }
+    .choices-grid { grid-template-columns: 1fr 1fr; }
+    .catch-btns { flex-direction: column; }
+    .odd-grid { grid-template-columns: 1fr 1fr; }
+    .action-btns { flex-direction: column; }
+    .btn-primary, .btn-secondary { width: 100%; }
+  }
+
+  /* ===== PARTICLE BURST ===== */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 998;
+    border-radius: 50%;
+    animation: particleFly 0.9s ease forwards;
+  }
+  @keyframes particleFly {
+    0%   { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: var(--fly); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <div class="brand">✨ Echa's English Playground</div>
+  <div class="score-display"><span class="star">⭐</span> Total: <span id="total-score">0</span> pts</div>
+</div>
+
+<!-- FEEDBACK OVERLAY -->
+<div class="feedback-overlay" id="feedback-overlay">
+  <div class="feedback-pill" id="feedback-pill"></div>
+</div>
+
+<!-- ==================== LOBBY ==================== -->
+<div class="page active" id="lobby">
+  <div class="lobby-header">
+    <div class="title">English Playground</div>
+    <div class="subtitle">Choose a game and start learning! 🌸</div>
+  </div>
+  <div class="game-cards">
+    <div class="game-card glass" onclick="startGame('picture')">
+      <span class="card-emoji">🖼️</span>
+      <div class="card-title">Picture–Word Match</div>
+      <div class="card-desc">Look at the emoji and pick the correct English word!</div>
+      <div class="play-btn">Play Now →</div>
+    </div>
+    <div class="game-card glass" onclick="startGame('odd')">
+      <span class="card-emoji">🔍</span>
+      <div class="card-title">Odd One Out</div>
+      <div class="card-desc">Find the word that doesn't belong with the others!</div>
+      <div class="play-btn">Play Now →</div>
+    </div>
+    <div class="game-card glass" onclick="startGame('catch')">
+      <span class="card-emoji">🎯</span>
+      <div class="card-title">Quick Translate Catch</div>
+      <div class="card-desc">Catch the falling word before it hits the ground!</div>
+      <div class="play-btn">Play Now →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAME 1: PICTURE WORD MATCH ==================== -->
+<div class="page" id="page-picture">
+  <div class="game-container">
+    <div class="game-header">
+      <button class="back-btn" onclick="goLobby()">← Back</button>
+      <div class="game-title-badge">🖼️ Picture Match</div>
+      <div class="game-progress">Q <span id="pic-q-num">1</span>/5</div>
+    </div>
+    <div class="question-box glass">
+      <span class="prompt-text">What is this?</span>
+      <span class="big-emoji" id="pic-emoji">🍎</span>
+      <div class="choices-grid" id="pic-choices"></div>
+    </div>
+    <div id="pic-complete" style="display:none" class="round-complete glass">
+      <span class="complete-emoji">🎉</span>
+      <div class="complete-title">Round Complete!</div>
+      <div class="complete-sub">You finished Picture–Word Match!</div>
+      <div class="complete-score" id="pic-final-score">+0</div>
+      <div class="complete-label">points earned this round</div>
+      <div class="action-btns">
+        <button class="btn-primary" onclick="startGame('picture')">Play Again 🔄</button>
+        <button class="btn-secondary" onclick="goLobby()">🏠 Lobby</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAME 2: ODD ONE OUT ==================== -->
+<div class="page" id="page-odd">
+  <div class="game-container">
+    <div class="game-header">
+      <button class="back-btn" onclick="goLobby()">← Back</button>
+      <div class="game-title-badge">🔍 Odd One Out</div>
+      <div class="game-progress">Q <span id="odd-q-num">1</span>/5</div>
+    </div>
+    <div class="question-box glass" id="odd-question-box">
+      <span class="prompt-text" id="odd-hint">Find the odd one out!</span>
+      <div style="height:16px"></div>
+      <div class="odd-grid" id="odd-choices"></div>
+    </div>
+    <div id="odd-complete" style="display:none" class="round-complete glass">
+      <span class="complete-emoji">🏆</span>
+      <div class="complete-title">Round Complete!</div>
+      <div class="complete-sub">You finished Odd One Out!</div>
+      <div class="complete-score" id="odd-final-score">+0</div>
+      <div class="complete-label">points earned this round</div>
+      <div class="action-btns">
+        <button class="btn-primary" onclick="startGame('odd')">Play Again 🔄</button>
+        <button class="btn-secondary" onclick="goLobby()">🏠 Lobby</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GAME 3: QUICK TRANSLATE CATCH ==================== -->
+<div class="page" id="page-catch">
+  <div class="game-container">
+    <div class="game-header">
+      <button class="back-btn" onclick="goLobby()">← Back</button>
+      <div class="game-title-badge">🎯 Translate Catch</div>
+      <div class="game-progress">Q <span id="catch-q-num">1</span>/5</div>
+    </div>
+    <div class="question-box glass" id="catch-main">
+      <div class="translate-prompt">Translate this Indonesian word 👇</div>
+      <div class="speed-bar-wrap"><div class="speed-bar" id="speed-bar"></div></div>
+      <div class="falling-area" id="falling-area">
+        <div class="falling-word" id="falling-word">Kucing</div>
+        <div class="danger-zone"></div>
+      </div>
+      <div class="catch-btns" id="catch-choices"></div>
+    </div>
+    <div id="catch-complete" style="display:none" class="round-complete glass">
+      <span class="complete-emoji">🌟</span>
+      <div class="complete-title">Round Complete!</div>
+      <div class="complete-sub">You finished Quick Translate Catch!</div>
+      <div class="complete-score" id="catch-final-score">+0</div>
+      <div class="complete-label">points earned this round</div>
+      <div class="action-btns">
+        <button class="btn-primary" onclick="startGame('catch')">Play Again 🔄</button>
+        <button class="btn-secondary" onclick="goLobby()">🏠 Lobby</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATOR TAG -->
+<div class="creator-tag">Made with <span class="heart">♥</span> by Echa Andini</div>
+
+<script>
+// ==================== DATA ====================
+const PICTURE_DATA = [
+  { emoji: '🍎', answer: 'Apple',      options: ['Apple', 'Mango', 'Grape', 'Banana'] },
+  { emoji: '🐱', answer: 'Cat',        options: ['Dog', 'Cat', 'Bird', 'Fish'] },
+  { emoji: '🚗', answer: 'Car',        options: ['Train', 'Plane', 'Car', 'Boat'] },
+  { emoji: '🌙', answer: 'Moon',       options: ['Star', 'Sun', 'Moon', 'Cloud'] },
+  { emoji: '📚', answer: 'Books',      options: ['Pen', 'Desk', 'Chair', 'Books'] },
+  { emoji: '🎵', answer: 'Music',      options: ['Music', 'Dance', 'Art', 'Sport'] },
+  { emoji: '🌺', answer: 'Flower',     options: ['Tree', 'Leaf', 'Flower', 'Grass'] },
+  { emoji: '🏠', answer: 'House',      options: ['School', 'Office', 'House', 'Store'] },
+];
+
+const ODD_DATA = [
+  { words: ['Apple', 'Banana', 'Grape', 'Carrot'],   odd: 'Carrot',   hint: '🍎 3 are fruits — which one is a vegetable?' },
+  { words: ['Dog', 'Cat', 'Parrot', 'Salmon'],        odd: 'Salmon',   hint: '🐾 3 are common pets — which is a fish?' },
+  { words: ['Red', 'Green', 'Blue', 'Triangle'],      odd: 'Triangle', hint: '🎨 3 are colors — which one is a shape?' },
+  { words: ['Football', 'Tennis', 'Chess', 'Swimming'], odd: 'Chess',  hint: '⚽ 3 are physical sports — which is a board game?' },
+  { words: ['Paris', 'Tokyo', 'Berlin', 'Amazon'],   odd: 'Amazon',   hint: '🌍 3 are capital cities — which is a river?' },
+  { words: ['January', 'March', 'Friday', 'August'], odd: 'Friday',   hint: '📅 3 are months — which is a day?' },
+  { words: ['Piano', 'Guitar', 'Violin', 'Trumpet'], odd: 'Trumpet',  hint: '🎸 3 have strings — which one is a wind instrument?' },
+];
+
+const CATCH_DATA = [
+  { id: 'Kucing',  answer: 'Cat',     options: ['Dog', 'Cat', 'Bird'] },
+  { id: 'Mobil',   answer: 'Car',     options: ['Bike', 'Car', 'Bus'] },
+  { id: 'Sekolah', answer: 'School',  options: ['School', 'Market', 'Park'] },
+  { id: 'Hujan',   answer: 'Rain',    options: ['Wind', 'Rain', 'Snow'] },
+  { id: 'Buku',    answer: 'Book',    options: ['Book', 'Pen', 'Bag'] },
+  { id: 'Makan',   answer: 'Eat',     options: ['Sleep', 'Run', 'Eat'] },
+  { id: 'Tidur',   answer: 'Sleep',   options: ['Sleep', 'Walk', 'Play'] },
+  { id: 'Pohon',   answer: 'Tree',    options: ['Flower', 'Tree', 'Grass'] },
+];
+
+// ==================== STATE ====================
+let totalScore = parseInt(localStorage.getItem('echaScore') || '0');
+let currentGame = '';
+let currentIndex = 0;
+let roundScore = 0;
+let shuffledData = [];
+let fallAnim = null;
+let fallY = 0;
+let fallSpeed = 0;
+let fallActive = false;
+const QUESTIONS_PER_ROUND = 5;
+
+// ==================== INIT ====================
+document.getElementById('total-score').textContent = totalScore;
+
+function shuffle(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goLobby() {
+  stopFall();
+  showPage('lobby');
+  currentGame = '';
+}
+
+// ==================== START GAME ====================
+function startGame(game) {
+  currentGame = game;
+  currentIndex = 0;
+  roundScore = 0;
+  stopFall();
+
+  if (game === 'picture') {
+    shuffledData = shuffle(PICTURE_DATA).slice(0, QUESTIONS_PER_ROUND);
+    showPage('page-picture');
+    document.getElementById('pic-complete').style.display = 'none';
+    loadPictureQ();
+  } else if (game === 'odd') {
+    shuffledData = shuffle(ODD_DATA).slice(0, QUESTIONS_PER_ROUND);
+    showPage('page-odd');
+    document.getElementById('odd-complete').style.display = 'none';
+    loadOddQ();
+  } else if (game === 'catch') {
+    shuffledData = shuffle(CATCH_DATA).slice(0, QUESTIONS_PER_ROUND);
+    showPage('page-catch');
+    document.getElementById('catch-complete').style.display = 'none';
+    loadCatchQ();
+  }
+}
+
+// ==================== GAME 1: PICTURE MATCH ====================
+function loadPictureQ() {
+  const q = shuffledData[currentIndex];
+  document.getElementById('pic-q-num').textContent = currentIndex + 1;
+  const emojiEl = document.getElementById('pic-emoji');
+  emojiEl.textContent = q.emoji;
+  emojiEl.style.animation = 'none';
+  void emojiEl.offsetWidth;
+  emojiEl.style.animation = 'emojiPop 0.5s var(--transition)';
+
+  const opts = shuffle(q.options);
+  const container = document.getElementById('pic-choices');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = opt;
+    btn.onclick = () => answerPicture(opt === q.answer, btn, container);
+    container.appendChild(btn);
+  });
+}
+
+function answerPicture(correct, btn, container) {
+  container.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  const q = shuffledData[currentIndex];
+  if (correct) {
+    btn.classList.add('correct');
+    addScore(10);
+    feedback(true);
+    spawnParticles(btn);
+  } else {
+    btn.classList.add('wrong');
+    // Highlight correct
+    container.querySelectorAll('.choice-btn').forEach(b => {
+      if (b.textContent === q.answer) b.classList.add('correct');
+    });
+    feedback(false);
+  }
+  setTimeout(() => {
+    currentIndex++;
+    if (currentIndex >= QUESTIONS_PER_ROUND) endRound('picture');
+    else loadPictureQ();
+  }, 1400);
+}
+
+// ==================== GAME 2: ODD ONE OUT ====================
+function loadOddQ() {
+  const q = shuffledData[currentIndex];
+  document.getElementById('odd-q-num').textContent = currentIndex + 1;
+  document.getElementById('odd-hint').textContent = q.hint;
+
+  const opts = shuffle(q.words);
+  const container = document.getElementById('odd-choices');
+  container.innerHTML = '';
+  opts.forEach(word => {
+    const btn = document.createElement('button');
+    btn.className = 'odd-btn';
+    btn.textContent = word;
+    btn.onclick = () => answerOdd(word === q.odd, btn, container, q.odd);
+    container.appendChild(btn);
+  });
+}
+
+function answerOdd(correct, btn, container, oddWord) {
+container.querySelectorAll('.odd-btn').forEach(b => b.disabled = true);
+if (correct) {
+    btn.classList.add('correct');
+    addScore(10);
+    feedback(true);
+    spawnParticles(btn);
+} else {
+    btn.classList.add('wrong');
+    container.querySelectorAll('.odd-btn').forEach(b => {
+    if (b.textContent === oddWord) b.classList.add('correct');
+    });
+    feedback(false);
+}
+setTimeout(() => {
+    currentIndex++;
+    if (currentIndex >= QUESTIONS_PER_ROUND) endRound('odd');
+    else loadOddQ();
+}, 1400);
+}
+
+// ==================== GAME 3: TRANSLATE CATCH ====================
+function loadCatchQ() {
+const q = shuffledData[currentIndex];
+  document.getElementById('catch-q-num').textContent = currentIndex + 1;
+  const area = document.getElementById('falling-area');
+  const word = document.getElementById('falling-word');
+  word.textContent = q.id;
+  fallY = 0;
+  word.style.top = '8px';
+
+  const areaH = area.clientHeight || 280;
+  fallSpeed = 0.6 + currentIndex * 0.08; // slightly faster each question
+
+  // Speed bar
+  updateSpeedBar(1);
+
+  const opts = shuffle(q.options);
+  const container = document.getElementById('catch-choices');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'catch-btn';
+    btn.textContent = opt;
+    btn.onclick = () => answerCatch(opt === q.answer, btn, container);
+    container.appendChild(btn);
+});
+
+fallActive = true;
+stopFall();
+startFall(areaH);
+}
+
+function startFall(areaH) {
+const word = document.getElementById('falling-word');
+const startTime = performance.now();
+const duration = (areaH - 20) / fallSpeed * 16; // ms
+
+function step(now) {
+    if (!fallActive) return;
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    fallY = progress * (areaH - 60);
+    word.style.top = fallY + 'px';
+    updateSpeedBar(1 - progress);
+    if (progress < 1) {
+    fallAnim = requestAnimationFrame(step);
+    } else {
+      // Timeout — word hit ground
+      fallActive = false;
+      timeoutCatch();
+    }
+  }
+  fallAnim = requestAnimationFrame(step);
+}
+
+function stopFall() {
+  fallActive = false;
+  if (fallAnim) { cancelAnimationFrame(fallAnim); fallAnim = null; }
+}
+
+function updateSpeedBar(ratio) {
+  const bar = document.getElementById('speed-bar');
+  bar.style.width = (ratio * 100) + '%';
+  if (ratio > 0.5) bar.style.background = 'linear-gradient(90deg, #22c55e, #86efac)';
+  else if (ratio > 0.25) bar.style.background = 'linear-gradient(90deg, #f59e0b, #fcd34d)';
+  else bar.style.background = 'linear-gradient(90deg, #ef4444, #fca5a5)';
+}
+
+function timeoutCatch() {
+  const q = shuffledData[currentIndex];
+  const container = document.getElementById('catch-choices');
+  container.querySelectorAll('.catch-btn').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.answer) b.classList.add('correct');
+    else b.classList.add('timeout');
+  });
+  feedback(false, '⏰ Too slow!');
+  setTimeout(() => {
+    currentIndex++;
+    if (currentIndex >= QUESTIONS_PER_ROUND) endRound('catch');
+    else loadCatchQ();
+  }, 1500);
+}
+
+function answerCatch(correct, btn, container) {
+stopFall();
+container.querySelectorAll('.catch-btn').forEach(b => b.disabled = true);
+const q = shuffledData[currentIndex];
+if (correct) {
+    btn.classList.add('correct');
+    addScore(10);
+    feedback(true);
+    spawnParticles(btn);
+} else {
+    btn.classList.add('wrong');
+    container.querySelectorAll('.catch-btn').forEach(b => {
+    if (b.textContent === q.answer) b.classList.add('correct');
+    });
+    feedback(false);
+}
+setTimeout(() => {
+    currentIndex++;
+    if (currentIndex >= QUESTIONS_PER_ROUND) endRound('catch');
+    else loadCatchQ();
+}, 1400);
+}
+
+// ==================== END ROUND ====================
+function endRound(game) {
+if (game === 'picture') {
+    document.getElementById('pic-emoji').parentElement.style.display = 'none'; // hide q
+    document.querySelector('#page-picture .question-box').style.display = 'none';
+    document.getElementById('pic-final-score').textContent = '+' + roundScore;
+    document.getElementById('pic-complete').style.display = 'block';
+} else if (game === 'odd') {
+    document.getElementById('odd-question-box').style.display = 'none';
+    document.getElementById('odd-final-score').textContent = '+' + roundScore;
+    document.getElementById('odd-complete').style.display = 'block';
+} else if (game === 'catch') {
+    document.getElementById('catch-main').style.display = 'none';
+    document.getElementById('catch-final-score').textContent = '+' + roundScore;
+    document.getElementById('catch-complete').style.display = 'block';
+}
+  // Reset hidden elements on next startGame
+setTimeout(() => {
+    document.querySelectorAll('.question-box').forEach(el => el.style.display = '');
+}, 100);
+}
+
+// ==================== SCORING ====================
+function addScore(pts) {
+roundScore += pts;
+totalScore += pts;
+localStorage.setItem('echaScore', totalScore);
+document.getElementById('total-score').textContent = totalScore;
+  // Floating score anim
+const el = document.createElement('div');
+el.className = 'score-anim';
+el.textContent = '+' + pts + ' ⭐';
+document.body.appendChild(el);
+setTimeout(() => el.remove(), 1300);
+}
+
+// ==================== FEEDBACK ====================
+function feedback(correct, msg) {
+const overlay = document.getElementById('feedback-overlay');
+const pill = document.getElementById('feedback-pill');
+if (correct) {
+    pill.textContent = msg || ['✨ Correct!', '🎉 Great job!', '🌟 Perfect!', '💯 Amazing!'][Math.floor(Math.random()*4)];
+    pill.className = 'feedback-pill correct-pill';
+} else {
+    pill.textContent = msg || ['❌ Try again!', '😅 Not quite!', '💪 Keep going!', '🙈 Oops!'][Math.floor(Math.random()*4)];
+    pill.className = 'feedback-pill wrong-pill';
+}
+overlay.classList.add('show');
+setTimeout(() => overlay.classList.remove('show'), 900);
+}
+
+// ==================== PARTICLES ====================
+function spawnParticles(btn) {
+const rect = btn.getBoundingClientRect();
+const cx = rect.left + rect.width / 2;
+const cy = rect.top + rect.height / 2;
+const colors = ['#e91e8c','#ff6eb4','#ffd6ec','#ff3da0','#ff9dd3'];
+for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 10 + 6;
+    const angle = (i / 12) * 360;
+    const dist = Math.random() * 80 + 40;
+    const rad = angle * Math.PI / 180;
+    const dx = Math.cos(rad) * dist;
+    const dy = Math.sin(rad) * dist;
+    p.style.cssText = `
+    left:${cx}px; top:${cy}px;
+    width:${size}px; height:${size}px;
+    background:${colors[i % colors.length]};
+    --fly: translate(${dx}px, ${dy}px) scale(0);
+    animation-duration: ${0.6 + Math.random()*0.4}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1100);
+}
+}
+</script>
+</body>
+</html>
